@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      # Dummy values so the build does not depend on real secrets.
+      DATABASE_URL: postgresql://user:password@localhost:5432/dummy
+      DATABASE_URL_UNPOOLED: postgresql://user:password@localhost:5432/dummy
+      BETTER_AUTH_SECRET: dummy-secret-for-ci-only
+      BETTER_AUTH_URL: http://localhost:3000
+      APP_ENV: development
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
