@@ -13,12 +13,20 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "next typegen && tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "postinstall": "prisma generate",
+    "db:push": "prisma db push",
+    "db:seed": "tsx --env-file-if-exists=.env.local scripts/seed.ts"
   },
   "dependencies": {
+    "@prisma/adapter-neon": "7.10.1",
+    "@prisma/client": "7.10.1",
+    "better-auth": "1.7.14",
     "next": "16.4.3",
     "react": "19.3.1",
-    "react-dom": "19.3.1"
+    "react-dom": "19.3.1",
+    "server-only": "0.0.1",
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "^4",
@@ -29,7 +37,9 @@
     "eslint-config-next": "16.4.3",
     "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.9.10",
+    "prisma": "7.10.1",
     "tailwindcss": "^4",
+    "tsx": "4.23.15",
     "typescript": "^5",
     "vitest": "^5.0.5"
   }

@@ -25,16 +25,26 @@ npm run dev
 
 ## コマンド
 
-| コマンド            | 内容                                             |
-| ------------------- | ------------------------------------------------ |
-| `npm run dev`       | 開発サーバー                                     |
-| `npm run build`     | 本番のビルド                                     |
-| `npm run lint`      | ESLint                                           |
-| `npm run format`    | Prettier で整える(`format:check` は確かめるだけ) |
-| `npm run typecheck` | 型チェック(`next typegen` のあと `tsc --noEmit`) |
-| `npm test`          | Vitest(時刻は UTC で動く)                        |
+| コマンド            | 内容                                                               |
+| ------------------- | ------------------------------------------------------------------ |
+| `npm run dev`       | 開発サーバー                                                       |
+| `npm run build`     | 本番のビルド                                                       |
+| `npm run lint`      | ESLint                                                             |
+| `npm run format`    | Prettier で整える(`format:check` は確かめるだけ)                   |
+| `npm run typecheck` | 型チェック(`next typegen` のあと `tsc --noEmit`)                   |
+| `npm test`          | Vitest(時刻は UTC で動く)                                          |
+| `npm run db:push`   | 表を開発用DBに作る(バック担当だけ。`DATABASE_URL_UNPOOLED` が要る) |
+| `npm run db:seed`   | 最初の許可リストなどを開発用DBに入れる(下の「ログインの準備」)     |
 
 プルリクエストのたびに、GitHub Actions が `format:check`・`lint`・`typecheck`・`test`・`build` を走らせる。
+
+## ログインの準備(開発用)
+
+1. Vercel の環境変数に、`.env.example` の値を入れる(Microsoft 関係、`BETTER_AUTH_SECRET`、`BETTER_AUTH_URL`、`ALLOWED_EMAIL_DOMAINS`、`APP_ENV=development` など)。接続文字列や秘密の値は、チャットに貼らず、直接入れる。
+2. 表を作る(バック担当だけ): `.env.local` に `DATABASE_URL_UNPOOLED` を入れて `npm run db:push`。
+3. 許可リストを入れる: `.env.local` に `SEED_ALLOWED_EMAILS`(カンマ区切り)などを入れて `npm run db:seed`。メールは Git に入れない。
+4. 開発環境(`APP_ENV=development`)では、許可リストにある人と `INITIAL_ADMIN_EMAIL` だけがログインできる。
+5. localhost ではログインしない。ログインは、自分の Vercel の URL で確かめる(戻り先の URL は `/api/auth/callback/microsoft`)。
 
 ## 注意
 
