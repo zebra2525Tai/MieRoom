@@ -1,6 +1,10 @@
 import "server-only";
 import { z } from "zod";
-import { compileStudentPattern, parseDomainList } from "@/lib/auth/policy";
+import {
+  compileStudentPattern,
+  parseDomainList,
+  parseTenantIdList,
+} from "@/lib/auth/policy";
 
 function isValidStudentPattern(value: string): boolean {
   try {
@@ -22,7 +26,20 @@ const schema = z.object({
   APP_ENV: z.enum(["production", "development"]),
   MICROSOFT_CLIENT_ID: z.string().min(1),
   MICROSOFT_CLIENT_SECRET: z.string().min(1),
+  // The tenant the app is registered in.
   MICROSOFT_TENANT_ID: z.uuid(),
+  // Optional. Tenants whose accounts may sign in, comma separated. When set, the
+  // app accepts sign-ins from any organization at Microsoft and OUR code lets only
+  // these tenants through (the tid check). Unset: only MICROSOFT_TENANT_ID.
+  MICROSOFT_ALLOWED_TENANT_IDS: z
+    .string()
+    .optional()
+    .default("")
+    .refine(
+      (value) =>
+        parseTenantIdList(value).every((id) => z.uuid().safeParse(id).success),
+      "must be tenant ids (UUIDs) separated by commas",
+    ),
   ALLOWED_EMAIL_DOMAINS: z
     .string()
     .refine(
@@ -44,8 +61,14 @@ const schema = z.object({
 
 export type ServerEnv = Omit<
   z.infer<typeof schema>,
-  "ALLOWED_EMAIL_DOMAINS" | "STUDENT_EMAIL_PATTERN"
+  | "ALLOWED_EMAIL_DOMAINS"
+  | "STUDENT_EMAIL_PATTERN"
+  | "MICROSOFT_ALLOWED_TENANT_IDS"
 > & {
+  /** Tenant ids (tid) allowed to sign in. Never empty. */
+  MICROSOFT_TENANT_IDS: string[];
+  /** What Better Auth puts in the Microsoft login address: one tenant, or "organizations". */
+  MICROSOFT_AUTHORITY: string;
   ALLOWED_EMAIL_DOMAINS: string[];
   /** null: not configured, so the teacher list decides. */
   STUDENT_EMAIL_PATTERN: RegExp | null;
@@ -64,8 +87,17 @@ export function getEnv(): ServerEnv {
       `Invalid or missing environment variables: ${names.join(", ")}`,
     );
   }
+  const listed = parseTenantIdList(parsed.data.MICROSOFT_ALLOWED_TENANT_IDS);
+  const { MICROSOFT_ALLOWED_TENANT_IDS: _unused, ...rest } = parsed.data;
+  void _unused;
   cached = {
-    ...parsed.data,
+    ...rest,
+    MICROSOFT_TENANT_IDS:
+      listed.length > 0
+        ? listed
+        : [parsed.data.MICROSOFT_TENANT_ID.toLowerCase()],
+    MICROSOFT_AUTHORITY:
+      listed.length > 0 ? "organizations" : parsed.data.MICROSOFT_TENANT_ID,
     ALLOWED_EMAIL_DOMAINS: parseDomainList(parsed.data.ALLOWED_EMAIL_DOMAINS),
     STUDENT_EMAIL_PATTERN: compileStudentPattern(
       parsed.data.STUDENT_EMAIL_PATTERN,

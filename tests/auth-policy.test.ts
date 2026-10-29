@@ -3,6 +3,7 @@ import {
   compileStudentPattern,
   determineRole,
   evaluateMicrosoftProfile,
+  parseTenantIdList,
   isFreshSession,
   isLoginPermitted,
   parseDomainList,
@@ -11,7 +12,7 @@ import {
 
 const TENANT = "77ff3d48-a645-4053-91c5-38b2065afa37";
 const config = {
-  tenantId: TENANT,
+  tenantIds: [TENANT],
   allowedDomains: ["school.onmicrosoft.com"],
 };
 
@@ -133,7 +134,7 @@ describe("evaluateMicrosoftProfile (ME001: not a school account)", () => {
   it("fails closed when no allowed domain is configured", () => {
     const result = evaluateMicrosoftProfile(
       { tid: TENANT, email: "a@school.onmicrosoft.com" },
-      { tenantId: TENANT, allowedDomains: [] },
+      { tenantIds: [TENANT], allowedDomains: [] },
     );
     expect(result).toEqual({ ok: false, code: "ME001" });
   });
@@ -141,7 +142,7 @@ describe("evaluateMicrosoftProfile (ME001: not a school account)", () => {
   it("fails closed when no tenant id is configured", () => {
     const result = evaluateMicrosoftProfile(
       { tid: "", email: "a@school.onmicrosoft.com" },
-      { tenantId: "", allowedDomains: ["school.onmicrosoft.com"] },
+      { tenantIds: [], allowedDomains: ["school.onmicrosoft.com"] },
     );
     expect(result).toEqual({ ok: false, code: "ME001" });
   });
@@ -436,5 +437,86 @@ describe("determineRole with a student e-mail pattern", () => {
         activeTeacherEmails: ["tanaka@school.onmicrosoft.com"],
       }),
     ).toBe("teacher");
+  });
+});
+
+describe("evaluateMicrosoftProfile with several allowed tenants", () => {
+  const OTHER = "103afe75-0bcb-4e7d-8b68-d24025dfa82b";
+  const STRANGER = "11111111-2222-3333-4444-555555555555";
+  const multi = {
+    tenantIds: [TENANT, OTHER],
+    allowedDomains: ["school.onmicrosoft.com"],
+  };
+
+  it("accepts an account from any listed tenant", () => {
+    for (const tid of [TENANT, OTHER]) {
+      expect(
+        evaluateMicrosoftProfile(
+          { tid, email: "a@school.onmicrosoft.com" },
+          multi,
+        ).ok,
+      ).toBe(true);
+    }
+  });
+
+  it("rejects a tenant that is not listed, whatever the e-mail says", () => {
+    expect(
+      evaluateMicrosoftProfile(
+        { tid: STRANGER, email: "a@school.onmicrosoft.com" },
+        multi,
+      ),
+    ).toEqual({ ok: false, code: "ME001" });
+  });
+
+  it("ignores blank entries in the list and never matches an empty tid", () => {
+    const withBlank = { ...multi, tenantIds: ["", "  ", OTHER] };
+    expect(
+      evaluateMicrosoftProfile(
+        { tid: "", email: "a@school.onmicrosoft.com" },
+        withBlank,
+      ).ok,
+    ).toBe(false);
+    expect(
+      evaluateMicrosoftProfile(
+        { tid: OTHER, email: "a@school.onmicrosoft.com" },
+        withBlank,
+      ).ok,
+    ).toBe(true);
+  });
+
+  it("fails closed when the list is empty", () => {
+    expect(
+      evaluateMicrosoftProfile(
+        { tid: TENANT, email: "a@school.onmicrosoft.com" },
+        { ...multi, tenantIds: [] },
+      ).ok,
+    ).toBe(false);
+  });
+
+  it("still refuses guests and wrong domains in a listed tenant", () => {
+    expect(
+      evaluateMicrosoftProfile(
+        {
+          tid: OTHER,
+          preferred_username: "bob_x.example#EXT#@school.onmicrosoft.com",
+        },
+        multi,
+      ).ok,
+    ).toBe(false);
+    expect(
+      evaluateMicrosoftProfile({ tid: OTHER, email: "a@other.example" }, multi)
+        .ok,
+    ).toBe(false);
+  });
+});
+
+describe("parseTenantIdList", () => {
+  it("splits, trims and lowercases", () => {
+    expect(parseTenantIdList(" AAA , bbb,, ")).toEqual(["aaa", "bbb"]);
+  });
+
+  it("returns an empty list for undefined or empty", () => {
+    expect(parseTenantIdList(undefined)).toEqual([]);
+    expect(parseTenantIdList("")).toEqual([]);
   });
 });

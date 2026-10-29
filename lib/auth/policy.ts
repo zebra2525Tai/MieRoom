@@ -8,7 +8,8 @@ export type AppEnv = "production" | "development";
 export type LoginErrorCode = "ME001" | "ME002" | "ME003" | "ME005";
 
 export type MicrosoftLoginConfig = {
-  tenantId: string;
+  /** Tenant ids (tid) whose accounts may sign in. Empty: nobody. */
+  tenantIds: string[];
   allowedDomains: string[];
 };
 
@@ -38,7 +39,8 @@ function isGuestName(value: string | undefined): boolean {
 
 /**
  * Decides whether a Microsoft profile belongs to the school.
- * Both the tenant id (tid) and the e-mail domain must match, guests are refused,
+ * Both the tenant id (tid, one of the allowed tenants) and the e-mail domain must
+ * match, guests are refused,
  * and everything fails closed (missing config, missing or odd claims).
  *
  * The e-mail is a value the tenant admin can set, so it is never trusted
@@ -48,12 +50,14 @@ export function evaluateMicrosoftProfile(
   profile: Record<string, unknown>,
   config: MicrosoftLoginConfig,
 ): ProfileDecision {
-  const expectedTenant = config.tenantId.trim().toLowerCase();
-  if (expectedTenant === "" || config.allowedDomains.length === 0)
+  const expectedTenants = config.tenantIds
+    .map((item) => item.trim().toLowerCase())
+    .filter((item) => item !== "");
+  if (expectedTenants.length === 0 || config.allowedDomains.length === 0)
     return REJECT;
 
   const tid = asString(profile.tid)?.trim().toLowerCase();
-  if (tid === undefined || tid !== expectedTenant) return REJECT;
+  if (tid === undefined || !expectedTenants.includes(tid)) return REJECT;
 
   const emailClaim = asString(profile.email);
   const upn = asString(profile.preferred_username);
@@ -72,6 +76,15 @@ export function evaluateMicrosoftProfile(
   if (!config.allowedDomains.includes(domain)) return REJECT;
 
   return { ok: true, email };
+}
+
+/** " AAA , bbb,, " -> ["aaa", "bbb"] (tenant ids, lower case) */
+export function parseTenantIdList(value: string | undefined): string[] {
+  if (!value) return [];
+  return value
+    .split(",")
+    .map((item) => item.trim().toLowerCase())
+    .filter((item) => item !== "");
 }
 
 /** "a.example, @B.example" -> ["a.example", "b.example"] */

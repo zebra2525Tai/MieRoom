@@ -44,8 +44,11 @@ function createAuth() {
       microsoft: {
         clientId: env.MICROSOFT_CLIENT_ID,
         clientSecret: env.MICROSOFT_CLIENT_SECRET,
-        // A single tenant: tokens from other tenants fail verification.
-        tenantId: env.MICROSOFT_TENANT_ID,
+        // One tenant (other tenants fail at Microsoft), or "organizations" when
+        // MICROSOFT_ALLOWED_TENANT_IDS is set. In that case Microsoft lets any
+        // organization reach us, so the tid check in validateUserInfo below is
+        // what keeps everybody else out.
+        tenantId: env.MICROSOFT_AUTHORITY,
         // Ask for sign-in information only (外部設計書 09章): no Graph access,
         // no refresh token, and no profile photo stored in our database.
         disableDefaultScope: true,
@@ -69,7 +72,7 @@ function createAuth() {
           return { error: "ME003" };
         }
         const decision = evaluateMicrosoftProfile(source.oauth.profile ?? {}, {
-          tenantId: env.MICROSOFT_TENANT_ID,
+          tenantIds: env.MICROSOFT_TENANT_IDS,
           allowedDomains: env.ALLOWED_EMAIL_DOMAINS,
         });
         if (!decision.ok) return { error: decision.code };
