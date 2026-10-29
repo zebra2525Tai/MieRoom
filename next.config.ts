@@ -4,6 +4,9 @@ import type { NextConfig } from "next";
 // in proxy.ts because it carries a nonce that is new for every request.
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
+  // This site is not for search engines. Hiding the address is not access control
+  // (that is the allow list / tenant check), but it keeps the login page out of results.
+  { key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" },
   { key: "X-Frame-Options", value: "DENY" },
   // The monitor URL contains its passphrase, so never send it to other sites.
   { key: "Referrer-Policy", value: "no-referrer" },
