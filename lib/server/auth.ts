@@ -21,7 +21,9 @@ function createAuth() {
     database: prismaAdapter(db, { provider: "postgresql" }),
     advanced: {
       // UUIDs, so ids cannot be guessed or counted.
-      database: { generateId: "uuid" },
+      // (A function, not the string "uuid": that one leaves the id to the database,
+      // and our tables have no database default for it.)
+      database: { generateId: () => crypto.randomUUID() },
       useSecureCookies: true,
       defaultCookieAttributes: {
         httpOnly: true,
