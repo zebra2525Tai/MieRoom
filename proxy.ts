@@ -20,6 +20,7 @@ const PUBLIC_PREFIXES = [
   "/api/sensor",
   "/api/cron",
   "/_dev",
+  "/robots.txt",
 ];
 
 function isPublic(pathname: string): boolean {
