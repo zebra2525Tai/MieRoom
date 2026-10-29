@@ -102,12 +102,43 @@ export function isLoginPermitted(input: {
   return input.allowedEmails.some((item) => normalizeEmail(item) === email);
 }
 
-/** Admin > teacher > student, judged from e-mails on every request. */
+const MAX_PATTERN_LENGTH = 100;
+
+/**
+ * The shape of a student's e-mail (the part before "@"), e.g. "[0-9]{6}" for a
+ * six-digit student number. It comes from STUDENT_EMAIL_PATTERN, so the school's
+ * format never has to be written in the code.
+ *
+ * Returns null when nothing is configured (the feature is off). The pattern is
+ * wrapped so it must match the whole part, and an alternation like "a|b" cannot
+ * escape the anchors. Throws on an invalid or oversized pattern.
+ */
+export function compileStudentPattern(
+  value: string | undefined,
+): RegExp | null {
+  const source = (value ?? "").trim();
+  if (source === "") return null;
+  if (source.length > MAX_PATTERN_LENGTH) {
+    throw new Error("STUDENT_EMAIL_PATTERN is too long");
+  }
+  return new RegExp(`^(?:${source})$`);
+}
+
+/**
+ * Admin > teacher > student, judged from the verified e-mail on every request.
+ *
+ * With a student pattern: an address that fits it is a student, every other
+ * school address is a teacher, and the student number can never be promoted
+ * (by the teacher list). Admins are never made automatically: only
+ * INITIAL_ADMIN_EMAIL and the registered admins.
+ * Without a pattern: only the active teacher list makes a teacher.
+ */
 export function determineRole(input: {
   email: string;
   initialAdminEmail: string;
   adminEmails: string[];
   activeTeacherEmails: string[];
+  studentEmailPattern?: RegExp | null;
 }): Role {
   const email = normalizeEmail(input.email);
   if (email === "") return "student";
@@ -115,6 +146,13 @@ export function determineRole(input: {
   if (initialAdmin !== "" && email === initialAdmin) return "admin";
   if (input.adminEmails.some((item) => normalizeEmail(item) === email))
     return "admin";
+
+  const pattern = input.studentEmailPattern;
+  if (pattern) {
+    const localPart = email.split("@")[0];
+    return pattern.test(localPart) ? "student" : "teacher";
+  }
+
   if (
     input.activeTeacherEmails.some((item) => normalizeEmail(item) === email)
   ) {

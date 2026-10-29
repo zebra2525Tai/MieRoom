@@ -48,12 +48,16 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
     if (!permitted) return null;
   }
 
+  // The teacher list only matters when no student pattern is configured.
+  const studentEmailPattern = env.STUDENT_EMAIL_PATTERN;
   const [admins, teachers] = await Promise.all([
     db.adminEmail.findMany({ where: { email }, select: { email: true } }),
-    db.teacher.findMany({
-      where: { email, active: true },
-      select: { email: true },
-    }),
+    studentEmailPattern
+      ? Promise.resolve([])
+      : db.teacher.findMany({
+          where: { email, active: true },
+          select: { email: true },
+        }),
   ]);
 
   const role = determineRole({
@@ -63,6 +67,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
     activeTeacherEmails: teachers.flatMap((row) =>
       row.email ? [row.email] : [],
     ),
+    studentEmailPattern,
   });
 
   return { id: session.user.id, name: session.user.name, role };

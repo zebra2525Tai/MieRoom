@@ -1,6 +1,15 @@
 import "server-only";
 import { z } from "zod";
-import { parseDomainList } from "@/lib/auth/policy";
+import { compileStudentPattern, parseDomainList } from "@/lib/auth/policy";
+
+function isValidStudentPattern(value: string): boolean {
+  try {
+    compileStudentPattern(value);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 // Read lazily (on the first request, not at import time) so that `next build`
 // works without real secrets, as in CI. A missing value fails closed with a
@@ -21,13 +30,25 @@ const schema = z.object({
       "needs at least one domain",
     ),
   INITIAL_ADMIN_EMAIL: z.string().optional().default(""),
+  // Optional. The shape of a student's e-mail before "@" (e.g. [0-9]{6}).
+  // Unset: only the teacher list makes a teacher.
+  STUDENT_EMAIL_PATTERN: z
+    .string()
+    .optional()
+    .default("")
+    .refine(
+      isValidStudentPattern,
+      "must be a valid pattern of at most 100 characters",
+    ),
 });
 
 export type ServerEnv = Omit<
   z.infer<typeof schema>,
-  "ALLOWED_EMAIL_DOMAINS"
+  "ALLOWED_EMAIL_DOMAINS" | "STUDENT_EMAIL_PATTERN"
 > & {
   ALLOWED_EMAIL_DOMAINS: string[];
+  /** null: not configured, so the teacher list decides. */
+  STUDENT_EMAIL_PATTERN: RegExp | null;
 };
 
 let cached: ServerEnv | undefined;
@@ -46,6 +67,9 @@ export function getEnv(): ServerEnv {
   cached = {
     ...parsed.data,
     ALLOWED_EMAIL_DOMAINS: parseDomainList(parsed.data.ALLOWED_EMAIL_DOMAINS),
+    STUDENT_EMAIL_PATTERN: compileStudentPattern(
+      parsed.data.STUDENT_EMAIL_PATTERN,
+    ),
   };
   return cached;
 }

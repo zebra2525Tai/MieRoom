@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  compileStudentPattern,
   determineRole,
   evaluateMicrosoftProfile,
   isFreshSession,
@@ -322,5 +323,118 @@ describe("parseDomainList", () => {
   it("returns an empty list for undefined or empty", () => {
     expect(parseDomainList(undefined)).toEqual([]);
     expect(parseDomainList("")).toEqual([]);
+  });
+});
+
+describe("compileStudentPattern", () => {
+  it("returns null when nothing is configured (the feature is off)", () => {
+    expect(compileStudentPattern(undefined)).toBeNull();
+    expect(compileStudentPattern("")).toBeNull();
+    expect(compileStudentPattern("   ")).toBeNull();
+  });
+
+  it("matches the whole local part only", () => {
+    const pattern = compileStudentPattern("[0-9]{6}");
+    expect(pattern?.test("123456")).toBe(true);
+    for (const value of [
+      "12345",
+      "1234567",
+      "a123456",
+      "123456a",
+      "123456 ",
+      "",
+    ]) {
+      expect(pattern?.test(value)).toBe(false);
+    }
+  });
+
+  it("does not let an alternation escape the anchors", () => {
+    const pattern = compileStudentPattern("[0-9]{6}|admin");
+    expect(pattern?.test("123456")).toBe(true);
+    expect(pattern?.test("admin")).toBe(true);
+    expect(pattern?.test("xadmin")).toBe(false);
+    expect(pattern?.test("123456x")).toBe(false);
+  });
+
+  it("rejects an invalid or oversized pattern", () => {
+    expect(() => compileStudentPattern("[0-9")).toThrow();
+    expect(() => compileStudentPattern("a".repeat(101))).toThrow();
+  });
+
+  it("is not a stateful (global) regex", () => {
+    const pattern = compileStudentPattern("[0-9]{6}");
+    expect(pattern?.test("123456")).toBe(true);
+    expect(pattern?.test("123456")).toBe(true);
+  });
+});
+
+describe("determineRole with a student e-mail pattern", () => {
+  const pattern = compileStudentPattern("[0-9]{6}");
+  const base = {
+    initialAdminEmail: "root@school.onmicrosoft.com",
+    adminEmails: ["boss@school.onmicrosoft.com"],
+    activeTeacherEmails: [] as string[],
+    studentEmailPattern: pattern,
+  };
+
+  it("a six-digit student number is a student", () => {
+    expect(
+      determineRole({ ...base, email: "123456@school.onmicrosoft.com" }),
+    ).toBe("student");
+  });
+
+  it("everything else is a teacher, without being in the teacher list", () => {
+    expect(
+      determineRole({ ...base, email: "tanaka@school.onmicrosoft.com" }),
+    ).toBe("teacher");
+    expect(
+      determineRole({ ...base, email: "1234567@school.onmicrosoft.com" }),
+    ).toBe("teacher");
+  });
+
+  it("matches case-insensitively on the stored (lower-case) e-mail", () => {
+    expect(
+      determineRole({ ...base, email: "Tanaka@School.onmicrosoft.com" }),
+    ).toBe("teacher");
+  });
+
+  it("admins stay admins, and nobody becomes admin automatically", () => {
+    expect(
+      determineRole({ ...base, email: "root@school.onmicrosoft.com" }),
+    ).toBe("admin");
+    expect(
+      determineRole({ ...base, email: "boss@school.onmicrosoft.com" }),
+    ).toBe("admin");
+    expect(
+      determineRole({ ...base, email: "tanaka@school.onmicrosoft.com" }),
+    ).not.toBe("admin");
+  });
+
+  it("a student number is never promoted, even if it is in the teacher list or the admin list is empty", () => {
+    expect(
+      determineRole({
+        ...base,
+        email: "123456@school.onmicrosoft.com",
+        activeTeacherEmails: ["123456@school.onmicrosoft.com"],
+      }),
+    ).toBe("student");
+  });
+
+  it("an empty e-mail is a student (the lowest role)", () => {
+    expect(determineRole({ ...base, email: "" })).toBe("student");
+  });
+
+  it("without a pattern the teacher list decides, as before", () => {
+    const off = { ...base, studentEmailPattern: null };
+    expect(
+      determineRole({ ...off, email: "tanaka@school.onmicrosoft.com" }),
+    ).toBe("student");
+    expect(
+      determineRole({
+        ...off,
+        email: "tanaka@school.onmicrosoft.com",
+        activeTeacherEmails: ["tanaka@school.onmicrosoft.com"],
+      }),
+    ).toBe("teacher");
   });
 });
