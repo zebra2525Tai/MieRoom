@@ -3,11 +3,16 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
 import { evaluateMicrosoftProfile, isLoginPermitted } from "@/lib/auth/policy";
+import {
+  providerCredentialFields,
+  sessionTrackingFields,
+} from "@/lib/auth/privacy";
 import { getDb } from "./db";
 import { getEnv } from "./env";
 
-const SESSION_SECONDS = 60 * 60 * 24 * 7; // 7 days (仮。外部設計書 3-4)
-const SESSION_REFRESH_SECONDS = 60 * 60 * 24;
+// One day, counted from the sign-in. It is never extended (disableSessionRefresh
+// below), so a person signs in again every day and nothing about them outlives it.
+const SESSION_SECONDS = 60 * 60 * 24;
 
 function createAuth() {
   const env = getEnv();
@@ -33,11 +38,26 @@ function createAuth() {
     },
     session: {
       expiresIn: SESSION_SECONDS,
-      updateAge: SESSION_REFRESH_SECONDS,
+      disableSessionRefresh: true,
     },
-    // Provider tokens are not needed after sign-in; if kept, keep them encrypted.
+    // What we keep from a sign-in is decided in lib/auth/privacy.ts. IP tracking
+    // itself stays on (Better Auth's rate limit needs it); only the stored copy
+    // in the session row is emptied.
+    databaseHooks: {
+      session: {
+        create: { before: async () => ({ data: sessionTrackingFields() }) },
+      },
+      account: {
+        create: { before: async () => ({ data: providerCredentialFields() }) },
+        update: { before: async () => ({ data: providerCredentialFields() }) },
+      },
+    },
     account: {
+      // Nothing from Microsoft is kept (the hooks above); if that ever changes,
+      // keep the tokens encrypted. Existing accounts are not rewritten at every
+      // sign-in: one query less on Neon's free plan.
       encryptOAuthTokens: true,
+      updateAccountOnSignIn: false,
       // The sign-in "state" lives in an encrypted cookie, not in the database:
       // fewer queries on Neon's free plan and nothing to clean up.
       storeStateStrategy: "cookie",
@@ -56,6 +76,9 @@ function createAuth() {
         disableDefaultScope: true,
         scope: ["openid", "profile", "email"],
         disableProfilePhoto: true,
+        // The name (and e-mail) on our side is renewed at every sign-in, so it can
+        // be emptied when the session is over and come back at the next sign-in.
+        overrideUserInfoOnSignIn: true,
         // Work accounts often have no "email" claim; the user name is used instead.
         mapProfileToUser: (profile) => {
           const email = profile.email ?? profile.preferred_username;
