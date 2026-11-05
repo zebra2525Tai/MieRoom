@@ -1,4 +1,5 @@
 import Papa from "papaparse";
+import { isSchoolDate } from "./school-date";
 
 // Reads the 8 master CSVs (外部設計書 08章 8-3, the same files the system writes for the
 // Excel tool) and checks them against the master rules (R5-1, R5-5, R5-6, 14-1 #11).
@@ -95,17 +96,6 @@ const length = (value: string) => [...value].length;
 function normalizeRoomName(value: string): string {
   return value.replace(/[０-９]/g, (c) =>
     String.fromCharCode(c.charCodeAt(0) - 0xfee0),
-  );
-}
-
-function isRealDate(value: string): boolean {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
-  const [y, m, d] = value.split("-").map(Number);
-  const date = new Date(Date.UTC(y, m - 1, d));
-  return (
-    date.getUTCFullYear() === y &&
-    date.getUTCMonth() === m - 1 &&
-    date.getUTCDate() === d
   );
 }
 
@@ -434,7 +424,7 @@ export function buildMasterData(files: MasterFileTexts): {
     const end = row["終了日"] === "" ? null : row["終了日"];
     const className = row["対象クラス"] === "" ? null : row["対象クラス"];
     if (name === null) return;
-    if (!isRealDate(start) || (end !== null && !isRealDate(end))) {
+    if (!isSchoolDate(start) || (end !== null && !isSchoolDate(end))) {
       error(
         "ME414",
         `${at("closures", index)}: 日付は YYYY-MM-DD で入れてください`,
