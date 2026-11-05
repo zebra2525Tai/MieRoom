@@ -195,7 +195,7 @@ describe("demo data validator", () => {
 
   it("rejects a class whose home room is not a ホームルーム room (R5-6)", () => {
     const files = broken("master/クラスマスタ.csv", (rows) => {
-      rows[0][1] = "E101";
+      rows[0][1] = "601"; // a 空き教室
       return rows;
     });
     expect(validateFiles(files).join("\n")).toContain("R5-6");

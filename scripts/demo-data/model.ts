@@ -83,19 +83,20 @@ export type ClassDef = {
   homeRoom: string;
 };
 
+// A room's name starts with its floor (201 = 2階).
 const HOME_ROOMS: Record<string, string> = {
-  大学併修1年: "A101",
-  大学併修2年: "A102",
-  大学併修3年: "A103",
-  大学併修4年: "A104",
-  医療情報1年: "B201",
-  医療情報2年: "B202",
-  医療情報3年: "B203",
-  医療情報4年: "B204",
-  ゲームITエキスパート1年: "C301",
-  ゲームITエキスパート2年: "C302",
-  システム専攻1年: "C303",
-  システム専攻2年: "C304",
+  大学併修1年: "201",
+  大学併修2年: "302",
+  大学併修3年: "401",
+  大学併修4年: "403",
+  医療情報1年: "202",
+  医療情報2年: "303",
+  医療情報3年: "402",
+  医療情報4年: "501",
+  ゲームITエキスパート1年: "203",
+  ゲームITエキスパート2年: "304",
+  システム専攻1年: "301",
+  システム専攻2年: "305",
 };
 
 export const CLASSES: ClassDef[] = PROGRAMS.flatMap((program) =>
@@ -220,14 +221,14 @@ function subjectsOf(cls: ClassDef): { name: string; sessions: number }[] {
 
 // Surnames only (the tool uses the 表記 as is). Invented combinations, no real person.
 export const TEACHERS = [
-  "青野",
-  "細田",
+  "岸本",
+  "三和田",
   "石原",
   "上田",
-  "江口",
+  "中村",
   "太田",
-  "片山",
-  "木村",
+  "古村",
+  "政宗",
   "小松",
   "斉藤",
   "島田",
@@ -249,37 +250,37 @@ export type RoomDef = {
   note: string;
 };
 
-const HOME_ROOM_BUILDINGS: Record<string, string> = {
-  A: "A棟1階",
-  B: "B棟2階",
-  C: "C棟3階",
-};
+const floorOf = (room: string) => `${room[0]}階`;
 
 const FREE_ROOMS: RoomDef[] = [
-  { name: "E101", building: "E棟1階", kind: "空き教室", note: "PC教室" },
-  { name: "E102", building: "E棟1階", kind: "空き教室", note: "PC教室" },
-  { name: "E103", building: "E棟1階", kind: "空き教室", note: "PC教室" },
-  { name: "E104", building: "E棟1階", kind: "空き教室", note: "PC教室" },
-  { name: "D101", building: "D棟1階", kind: "空き教室", note: "ゼミ室" },
-  { name: "D102", building: "D棟1階", kind: "空き教室", note: "ゼミ室" },
+  { name: "101", building: floorOf("101"), kind: "空き教室", note: "大教室" },
+  { name: "502", building: floorOf("502"), kind: "空き教室", note: "ゼミ室" },
+  { name: "503", building: floorOf("503"), kind: "空き教室", note: "ゼミ室" },
+  { name: "504", building: floorOf("504"), kind: "空き教室", note: "講義室" },
+  { name: "505", building: floorOf("505"), kind: "空き教室", note: "講義室" },
+  { name: "601", building: floorOf("601"), kind: "空き教室", note: "PC教室" },
+  { name: "602", building: floorOf("602"), kind: "空き教室", note: "PC教室" },
+  { name: "603", building: floorOf("603"), kind: "空き教室", note: "PC教室" },
+  { name: "604", building: floorOf("604"), kind: "空き教室", note: "PC教室" },
 ];
 
 export const ROOMS: RoomDef[] = [
   ...CLASSES.map((cls) => ({
     name: cls.homeRoom,
-    building: HOME_ROOM_BUILDINGS[cls.homeRoom[0]],
+    building: floorOf(cls.homeRoom),
     kind: "ホームルーム" as const,
     note: "",
   })),
   ...FREE_ROOMS,
-];
+].sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
 
-const PC_ROOMS = ["E101", "E102", "E103", "E104"];
+const PC_ROOMS = ["601", "602", "603", "604"];
 const SEMINAR_ROOMS: Record<string, string> = {
-  大学基礎ゼミ: "D101",
-  実習報告ゼミ: "D102",
+  大学基礎ゼミ: "502",
+  実習報告ゼミ: "503",
 };
-const SUBSTITUTE_ROOMS = ["D101", "D102"];
+// Free rooms no 紐づけ names: used for the "a room that is not in the 紐づけ" exception.
+const SUBSTITUTE_ROOMS = ["504", "505"];
 
 const PC_SUBJECTS = new Set([
   "プログラミング基礎",
