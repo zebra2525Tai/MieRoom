@@ -1,7 +1,7 @@
 // Prisma 7. Connection URLs live in prisma.config.ts (CLI) and lib/server/db.ts (app).
 //
-// Only the tables the login needs exist so far. They are a first draft:
-// 詳細設計書 fixes the final shape (and the other tables) later.
+// The login tables and the master tables (外部設計書 11章 E02〜E09, E13) exist so far.
+// Lessons, reservations, locations and the monitor tables follow in their own steps.
 // Better Auth tables follow the shape Better Auth 1.7.14 expects (checked with getAuthTables).
 
 generator client {
@@ -98,15 +98,168 @@ model AdminEmail {
   @@map("admin_emails")
 }
 
-// E03 講師. Only what the role check needs for now: whoever has an active teacher e-mail is a teacher.
+// E03 講師。メールは、先生の判定に学生の形を使うときは使わない (任意)。
 model Teacher {
   id          String   @id @default(uuid()) @db.Uuid
-  displayName String   @unique
-  email       String?  @unique
-  tagId       String?  @unique
+  displayName String   @unique @db.VarChar(20)
+  email       String?  @unique @db.VarChar(254)
+  tagId       String?  @unique @db.VarChar(64)
   active      Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  subjectTeachers SubjectTeacher[]
+
   @@map("teachers")
+}
+
+// ---- マスタ (外部設計書 11章 E02〜E09, E13) -------------------------------------
+// 名前は無効なものも含めて重複不可 (R5-1)。文字数の上限は 14-1 #11。
+// 前後の空白を除くことと、教室名の全角数字→半角は、アプリ (zod) で行う。
+// 紐づけ表どうしのつながり (講師の行があるか等) は、保存では止めず、
+// 書き出し前の確認 (R5-6) で調べる (R5-5)。そのため紐づけ表の間に外部キーは張らない。
+
+enum RoomKind {
+  HOMEROOM // ホームルーム
+  FREE // 空き教室
+
+  @@map("room_kind")
+}
+
+enum ClosureSource {
+  SYSTEM // S23 で入れた
+  TOOL // 取込用 CSV の「休み・行事」の行
+
+  @@map("closure_source")
+}
+
+// E02 クラス。年度 Y に存在する = startYear <= Y <= endYear (endYear が空なら上限なし) (R5-4)。
+model SchoolClass {
+  id         String   @id @default(uuid()) @db.Uuid
+  name       String   @unique @db.VarChar(30)
+  homeRoomId String   @db.Uuid
+  startYear  Int
+  endYear    Int?
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // ホームルーム教室として使われている教室は消せない (R5-7)。
+  homeRoom        Room             @relation("HomeRoom", fields: [homeRoomId], references: [id], onDelete: Restrict)
+  subjects        ClassSubject[]
+  subjectTeachers SubjectTeacher[]
+  subjectRooms    SubjectRoom[]
+  closures        Closure[]
+
+  @@map("classes")
+}
+
+// E04 教科
+model Subject {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String   @unique @db.VarChar(30)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  classSubjects   ClassSubject[]
+  subjectTeachers SubjectTeacher[]
+  subjectRooms    SubjectRoom[]
+
+  @@map("subjects")
+}
+
+// E05 教室
+model Room {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String   @unique @db.VarChar(20)
+  building  String?  @db.VarChar(20) // 棟・階
+  kind      RoomKind
+  note      String?  @db.VarChar(50)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  homeClasses  SchoolClass[] @relation("HomeRoom")
+  receivers    Receiver[]
+  subjectRooms SubjectRoom[]
+
+  @@map("rooms")
+}
+
+// E06 受信機。1 つの受信機は 1 つの教室。1 つの教室に複数置ける (R7-3)。
+model Receiver {
+  id         String   @id @default(uuid()) @db.Uuid
+  receiverId String   @unique @db.VarChar(64) // IF01 の receiverId
+  roomId     String   @db.Uuid
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // 教室を消すと、受信機の登録も消える (R5-7)。
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@map("receivers")
+}
+
+// E07 クラスの教科
+model ClassSubject {
+  classId   String @db.Uuid
+  subjectId String @db.Uuid
+
+  class   SchoolClass @relation(fields: [classId], references: [id], onDelete: Cascade)
+  subject Subject     @relation(fields: [subjectId], references: [id], onDelete: Restrict)
+
+  @@id([classId, subjectId])
+  @@map("class_subjects")
+}
+
+// E08 教科の講師。teacherId が空 = 「各担当」。
+// NULL どうしは一意の索引で重複と見なされないため、teacherKey (講師の ID、または "each") で守る。
+// teacherKey はアプリが teacherId ?? "each" で必ず入れる。
+model SubjectTeacher {
+  classId    String  @db.Uuid
+  subjectId  String  @db.Uuid
+  teacherId  String? @db.Uuid
+  teacherKey String  @db.VarChar(36)
+
+  class   SchoolClass @relation(fields: [classId], references: [id], onDelete: Cascade)
+  subject Subject     @relation(fields: [subjectId], references: [id], onDelete: Restrict)
+  teacher Teacher?    @relation(fields: [teacherId], references: [id], onDelete: Restrict)
+
+  @@id([classId, subjectId, teacherKey])
+  @@map("subject_teachers")
+}
+
+// E09 教科の教室。roomId が空 = 「ー」(教室未定)。roomKey は教室の ID、または "none"。
+model SubjectRoom {
+  classId   String  @db.Uuid
+  subjectId String  @db.Uuid
+  roomId    String? @db.Uuid
+  roomKey   String  @db.VarChar(36)
+
+  class   SchoolClass @relation(fields: [classId], references: [id], onDelete: Cascade)
+  subject Subject     @relation(fields: [subjectId], references: [id], onDelete: Restrict)
+  room    Room?       @relation(fields: [roomId], references: [id], onDelete: Restrict)
+
+  @@id([classId, subjectId, roomKey])
+  @@map("subject_rooms")
+}
+
+// E13 休み・行事。classId が空 = 全校。endDate が空 = 1 日だけ。
+// source が TOOL の行は classId と targetMonth (YYYYMM) を持つ (アプリが守る)。
+model Closure {
+  id          String        @id @default(uuid()) @db.Uuid
+  startDate   DateTime      @db.Date
+  endDate     DateTime?     @db.Date
+  name        String        @db.VarChar(20)
+  classId     String?       @db.Uuid
+  source      ClosureSource
+  targetMonth String?       @db.VarChar(6)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // クラスを消すと、そのクラスの休み・行事も消える (R5-7)。
+  class SchoolClass? @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  @@map("closures")
 }
