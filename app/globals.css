@@ -1,26 +1,47 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* Colors and shapes taken from the screen prototype (Campus Guide). Light theme only. */
+@theme {
+  --color-navy: #173e53;
+  --color-teal: #257f78;
+  --color-teal-dark: #17695f;
+  --color-mint: #eaf5f1;
+  --color-canvas: #f4f7fa;
+  --color-ink: #1d3444;
+  --color-muted: #6d7e8b;
+  --color-line: #e1e9ef;
+  --color-amber-ink: #95671b;
+  --color-amber-soft: #fff5df;
+  --color-red-ink: #ac4141;
+  --color-red-soft: #fff0f0;
+  --radius-card: 14px;
+  --shadow-card: 0 4px 20px #16394d06;
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, "Noto Sans JP",
+    "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  body {
+    @apply bg-canvas text-ink text-sm leading-[1.65];
   }
-}
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  button {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+    opacity: 0.46;
+  }
+
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  summary:focus-visible {
+    outline: 3px solid #69b6be;
+    outline-offset: 3px;
+  }
 }
