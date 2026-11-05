@@ -4,7 +4,7 @@
    and keep text at WCAG AA contrast (4.5:1) and fields at 3:1, for color-blind users.
    Light theme only. */
 @theme {
-  --color-navy: #14246b;
+  --color-navy: #3a4fc9;
   --color-brand: #1e36d6;
   --color-action: #5d6ee1;
   --color-brand-dark: #162ab0;

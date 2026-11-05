@@ -68,7 +68,7 @@ export function PageHeading({
 }
 
 const CALLOUT_KINDS = {
-  info: "bg-[#e8ecff] text-[#14246b]",
+  info: "bg-[#e8ecff] text-[#3a4fc9]",
   warning: "bg-[#fff1d6] text-[#7a4400]",
   neutral: "bg-[#edf0f5] text-[#4a576c]",
   error: "bg-red-soft text-red-ink",
