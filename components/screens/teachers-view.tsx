@@ -98,9 +98,6 @@ export function TeachersView({
           {teachers.map((teacher) => (
             <Card key={teacher.id} className="flex flex-col gap-4 p-5">
               <div className="flex items-center gap-3">
-                <div className="grid h-[43px] w-[43px] shrink-0 place-items-center rounded-xl bg-[#e9eef6] text-[15px] font-bold text-navy">
-                  {teacher.name[0]}
-                </div>
                 <div className="text-base font-bold">{teacher.name}</div>
                 {teacher.location.kind === "room" && (
                   <div className="ml-auto">
