@@ -7,16 +7,15 @@ const ROLE_LABEL = {
   admin: "時間割管理者",
 } as const;
 
-// S02 ホーム(仮)。ログインと役割の確認のため、名前と役割だけを出す。
+// S02 ホーム(仮)。ログインと役割の確認のため、役割だけを出す。
+// 名前は画面に出さない(ログインで届いた氏名は、ログインの確認にだけ使う)。
 export default async function HomePage() {
   const user = await requireUser();
 
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-6 px-6 py-16">
       <h1 className="text-3xl font-semibold">ミエルーム</h1>
-      <p>
-        {user.name}さん（{ROLE_LABEL[user.role]}）としてログインしています。
-      </p>
+      <p>{ROLE_LABEL[user.role]}としてログインしています。</p>
       <form action={signOutAction}>
         <button
           type="submit"
