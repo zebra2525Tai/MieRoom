@@ -14,6 +14,10 @@ export function BrandMark() {
           <stop offset="0" stopColor="#4B6BFF" />
           <stop offset="1" stopColor="#1E36D6" />
         </linearGradient>
+        <linearGradient id="mieroom-mark-gRd" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#7D94FF" />
+          <stop offset="1" stopColor="#5D6EE1" />
+        </linearGradient>
         <linearGradient id="mieroom-mark-gTb" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#8fa3ff" />
           <stop offset="1" stopColor="#7482e6" />
@@ -86,8 +90,7 @@ export function BrandMark() {
             width="20"
             height="42"
             rx="4.6"
-            fill="url(#mieroom-mark-gDb)"
-            fillOpacity=".72"
+            fill="url(#mieroom-mark-gRd)"
           />
           <rect
             x="4"
