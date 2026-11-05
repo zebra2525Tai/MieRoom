@@ -77,10 +77,10 @@ function DayView({
           <Card
             key={period.no}
             className={`grid grid-cols-[60px_minmax(0,1fr)_64px] items-center gap-3 px-3 py-4 sm:grid-cols-[96px_minmax(0,1fr)_140px] sm:gap-4 sm:px-6 sm:py-5 ${
-              running ? "border-[#9bcabb] bg-[#f4fbf7]" : ""
+              running ? "border-[#8ea0ff] bg-[#f2f5ff]" : ""
             }`}
           >
-            <div className="text-xs font-bold text-[#4f6c7a]">
+            <div className="text-xs font-bold text-[#4a576c]">
               {period.label}
               <small className="mt-0.5 block text-[11px] font-normal text-muted">
                 {period.start}-{period.end}
@@ -194,7 +194,7 @@ function WeekView({ days, today }: { days: TimetableDay[]; today: string }) {
       <tbody>
         {PERIODS.map((period) => (
           <tr key={period.no}>
-            <Td className="font-bold text-[#4f6c7a]">
+            <Td className="font-bold text-[#4a576c]">
               {period.label}
               <span className="mt-0.5 block text-[11px] font-normal text-muted">
                 {period.start}-{period.end}
@@ -251,7 +251,7 @@ function MonthView({
         {WEEKDAY_HEADERS.map((name) => (
           <div
             key={name}
-            className="border-b border-line bg-[#f6f9fb] px-3 py-2 text-[11px] font-semibold text-[#6c8291]"
+            className="border-b border-line bg-[#f6f8fc] px-3 py-2 text-[11px] font-semibold text-[#586579]"
           >
             {name}
           </div>
@@ -262,12 +262,12 @@ function MonthView({
           return (
             <div
               key={day.date}
-              className={`min-h-[104px] border-b border-r border-[#edf1f4] p-2 text-[11px] ${
-                outside ? "bg-[#fafbfc] text-[#a6b3bc]" : ""
+              className={`min-h-[104px] border-b border-r border-[#e3e7f0] p-2 text-[11px] ${
+                outside ? "bg-[#f6f8fc] text-[#8a96ad]" : ""
               }`}
             >
               <div
-                className={`font-bold ${day.date === today ? "text-teal-dark" : ""}`}
+                className={`font-bold ${day.date === today ? "text-brand-dark" : ""}`}
               >
                 {Number(day.date.slice(8, 10))}
                 {day.date === today && (

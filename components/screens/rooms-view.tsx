@@ -68,7 +68,7 @@ function RoomCard({
           {room.name}
         </span>
         {room.building && (
-          <span className="rounded-[5px] bg-[#f1f5f7] px-1.5 py-0.5 text-[11px] text-[#78909f]">
+          <span className="rounded-[5px] bg-[#edf0f5] px-1.5 py-0.5 text-[11px] text-[#586579]">
             {room.building}
           </span>
         )}

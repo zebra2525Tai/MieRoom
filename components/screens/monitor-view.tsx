@@ -52,7 +52,7 @@ export function MonitorView({
                     {row.periodLabel ?? ""}
                   </td>
                   <td className="py-2 pr-4">{row.subject}</td>
-                  <td className="py-2 text-right font-bold text-teal-dark">
+                  <td className="py-2 text-right font-bold text-brand-dark">
                     {row.room}
                   </td>
                 </tr>

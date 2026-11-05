@@ -36,8 +36,8 @@ function NextLessonCard({
 }) {
   const next = lessons.kind === "ready" ? lessons.next : null;
   return (
-    <Card className="border-[#d7e9e2] bg-linear-to-r from-[#eef7f4] to-[#f7fbfa] p-6 sm:px-7">
-      <div className="flex items-center gap-2 text-[11px] font-bold tracking-wide text-teal">
+    <Card className="border-[#cfd7ff] bg-linear-to-r from-[#eef1ff] to-[#f7f8ff] p-6 sm:px-7">
+      <div className="flex items-center gap-2 text-[11px] font-bold tracking-wide text-brand">
         <Icon name="calendar" size={15} />
         次の授業
       </div>
@@ -59,7 +59,7 @@ function NextLessonCard({
             <span className="text-base font-bold">{next.subject}</span>
             <LessonBadges lesson={next} />
           </div>
-          <div className="mb-5 mt-1.5 flex flex-wrap gap-4 text-xs text-[#617e7c]">
+          <div className="mb-5 mt-1.5 flex flex-wrap gap-4 text-xs text-[#586579]">
             {next.date !== today && <span>{formatDate(next.date, today)}</span>}
             <span>
               {periodLabel(next.periodNo)} {periodTime(next.periodNo)}
@@ -72,7 +72,7 @@ function NextLessonCard({
           <div className="text-[44px] font-bold leading-tight text-navy sm:text-[52px]">
             未定
           </div>
-          <p className="mt-2 text-xs text-[#617e7c]">
+          <p className="mt-2 text-xs text-[#586579]">
             入力済みの時間割の範囲で、次の授業が見つかりません。
           </p>
         </div>
@@ -144,7 +144,7 @@ export function HomeView({
           })}
         />
         <Card className="flex flex-col justify-center p-6">
-          <div className="text-[11px] font-bold tracking-[0.12em] text-teal">
+          <div className="text-[11px] font-bold tracking-[0.12em] text-brand">
             先生の位置
           </div>
           <h2 className="mt-2 text-[17px] font-bold">先生は、どこにいる?</h2>
@@ -155,13 +155,13 @@ export function HomeView({
             <Icon
               name="search"
               size={17}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-[#91a1ad]"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-[#586579]"
             />
             <input
               name="q"
               aria-label="探したい先生の名前"
               placeholder="先生の名前で探す"
-              className="h-[42px] w-full rounded-lg border border-line bg-[#fbfcfd] pl-9 pr-3 text-xs"
+              className="h-[42px] w-full rounded-lg border border-line bg-[#f6f8fc] pl-9 pr-3 text-xs"
             />
           </Form>
           <div className="mt-3">

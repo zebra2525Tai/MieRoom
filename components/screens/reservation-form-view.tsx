@@ -119,7 +119,7 @@ export function ReservationFormView({
         <form className="flex flex-col gap-5">
           <fieldset>
             <legend className="mb-2 text-xs font-semibold">
-              枠<span className="ml-1.5 text-[11px] text-[#a75c4c]">必須</span>
+              枠<span className="ml-1.5 text-[11px] text-[#a3101f]">必須</span>
               <span className="ml-2 font-normal text-muted">
                 続けて選んでください
               </span>
@@ -133,7 +133,7 @@ export function ReservationFormView({
                     <label
                       key={slot.no}
                       className={`flex items-center gap-2.5 rounded-lg border border-line p-3 text-xs ${
-                        enabled ? "cursor-pointer" : "bg-[#f7f9fa] opacity-70"
+                        enabled ? "cursor-pointer" : "bg-[#f6f8fc] opacity-70"
                       }`}
                     >
                       <input
@@ -179,7 +179,7 @@ export function ReservationFormView({
               <input
                 readOnly
                 value={mode === "apply" ? "ログイン中の人" : "ログイン中の先生"}
-                className={`${fieldClass} bg-[#f4f7f9] text-[#7b8d99]`}
+                className={`${fieldClass} bg-[#f0f3fa] text-[#586579]`}
               />
             </Field>
             <Field label="備考" full help="100文字まで">

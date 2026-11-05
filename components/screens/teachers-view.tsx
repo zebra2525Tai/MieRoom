@@ -36,15 +36,15 @@ function LocationBox({ location }: { location: TeacherLocation }) {
         ? "受信機に検知されていません(校外という意味ではありません)"
         : "タグが登録されていません";
   return (
-    <div className="flex items-center justify-between gap-2.5 rounded-[9px] bg-[#f6f9fb] p-3.5">
+    <div className="flex items-center justify-between gap-2.5 rounded-[9px] bg-[#f6f8fc] p-3.5">
       <div className="min-w-0">
         <strong className="text-[19px] text-navy">{title}</strong>
-        <p className="mt-0.5 text-[11px] text-[#8494a1]">{note}</p>
+        <p className="mt-0.5 text-[11px] text-[#586579]">{note}</p>
       </div>
       <Icon
         name={location.kind === "room" ? "pin" : "info"}
         size={23}
-        className="text-[#8aa5b3]"
+        className="text-[#667389]"
       />
     </div>
   );
@@ -72,7 +72,7 @@ export function TeachersView({
             <Icon
               name="search"
               size={16}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-[#91a1ad]"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-[#586579]"
             />
             <input
               key={query}
@@ -80,7 +80,7 @@ export function TeachersView({
               defaultValue={query}
               aria-label="名前で絞る"
               placeholder="名前で絞る"
-              className="h-[38px] w-full rounded-lg border border-line bg-[#fbfcfd] pl-9 pr-3 text-xs"
+              className="h-[38px] w-full rounded-lg border border-line bg-[#f6f8fc] pl-9 pr-3 text-xs"
             />
           </div>
           <Button type="submit" size="sm" className="h-[38px]">
@@ -108,7 +108,7 @@ export function TeachersView({
               <LocationBox location={teacher.location} />
               {teacher.assignments.length > 0 && (
                 <details className="text-xs">
-                  <summary className="cursor-pointer font-semibold text-teal-dark">
+                  <summary className="cursor-pointer font-semibold text-brand-dark">
                     担当({teacher.assignments.length})
                   </summary>
                   <ul className="mt-2 flex flex-col gap-1 text-muted">

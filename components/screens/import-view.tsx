@@ -45,13 +45,13 @@ function Steps() {
     <div className="mb-6 mt-2 flex max-w-[680px] items-center gap-3">
       {["ファイルを選ぶ", "確認する", "取り込む"].map((label, index) => (
         <div key={label} className="contents">
-          {index > 0 && <div className="h-px min-w-6 flex-1 bg-[#dce5eb]" />}
+          {index > 0 && <div className="h-px min-w-6 flex-1 bg-[#d5dae6]" />}
           <div
-            className={`flex items-center gap-2 text-xs ${index === 0 ? "font-bold text-teal-dark" : "text-[#91a0ac]"}`}
+            className={`flex items-center gap-2 text-xs ${index === 0 ? "font-bold text-brand-dark" : "text-[#667389]"}`}
           >
             <span
               className={`grid h-[27px] w-[27px] place-items-center rounded-full text-[11px] font-bold ${
-                index === 0 ? "bg-[#dfefe8] text-teal-dark" : "bg-[#e8edf1]"
+                index === 0 ? "bg-[#e8ecff] text-brand-dark" : "bg-[#edf0f5]"
               }`}
             >
               {index + 1}
@@ -86,8 +86,8 @@ export function ImportView({
       </NotReadyNotice>
       <Steps />
 
-      <div className="rounded-xl border-[1.5px] border-dashed border-[#c6d5df] bg-[#fbfcfd] px-6 py-10 text-center">
-        <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-[14px] bg-[#eaf2f7] text-[#6993aa]">
+      <div className="rounded-xl border-[1.5px] border-dashed border-[#8a96ad] bg-[#f6f8fc] px-6 py-10 text-center">
+        <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-[14px] bg-[#e8ecff] text-[#4a576c]">
           <Icon name="upload" size={27} />
         </div>
         <h2 className="text-[17px] font-bold">取込用CSVを選ぶ</h2>

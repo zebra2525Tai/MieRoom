@@ -24,7 +24,7 @@ export function LoginView({
           <br />
           先生の居場所も。
         </h1>
-        <p className="mt-4 text-xs leading-loose text-[#bfced7] md:mt-5 md:text-[13px]">
+        <p className="mt-4 text-xs leading-loose text-[#c9d2f5] md:mt-5 md:text-[13px]">
           学校の予定を、分かりやすく。
           <br />
           教室の使用状況と先生の位置をまとめて確認できます。
@@ -32,7 +32,7 @@ export function LoginView({
       </section>
       <section className="flex items-center justify-center px-6 py-10">
         <div className="w-full max-w-[370px]">
-          <div className="mb-3.5 text-[11px] font-bold tracking-[0.12em] text-teal">
+          <div className="mb-3.5 text-[11px] font-bold tracking-[0.12em] text-brand">
             ミエルーム
           </div>
           <h2 className="text-[23px] font-bold sm:text-[25px]">ログイン</h2>

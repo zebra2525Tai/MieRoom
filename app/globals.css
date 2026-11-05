@@ -1,21 +1,23 @@
 @import "tailwindcss";
 
-/* Colors and shapes taken from the screen prototype (Campus Guide). Light theme only. */
+/* Shapes from the screen prototype (Campus Guide). Colors follow the app icon (cobalt)
+   and keep text at WCAG AA contrast (4.5:1) and fields at 3:1, for color-blind users.
+   Light theme only. */
 @theme {
-  --color-navy: #173e53;
-  --color-teal: #257f78;
-  --color-teal-dark: #17695f;
-  --color-mint: #eaf5f1;
-  --color-canvas: #f4f7fa;
-  --color-ink: #1d3444;
-  --color-muted: #6d7e8b;
-  --color-line: #e1e9ef;
-  --color-amber-ink: #95671b;
-  --color-amber-soft: #fff5df;
-  --color-red-ink: #ac4141;
-  --color-red-soft: #fff0f0;
+  --color-navy: #14246b;
+  --color-brand: #1e36d6;
+  --color-brand-dark: #162ab0;
+  --color-brand-tint: #e8ecff;
+  --color-canvas: #f4f6fb;
+  --color-ink: #1b2236;
+  --color-muted: #586579;
+  --color-line: #d5dae6;
+  --color-amber-ink: #7a4400;
+  --color-amber-soft: #fff1d6;
+  --color-red-ink: #a3101f;
+  --color-red-soft: #fdebee;
   --radius-card: 14px;
-  --shadow-card: 0 4px 20px #16394d06;
+  --shadow-card: 0 4px 20px #14246b0a;
   --font-sans:
     -apple-system, BlinkMacSystemFont, "Noto Sans JP",
     "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
@@ -41,7 +43,7 @@
   select:focus-visible,
   textarea:focus-visible,
   summary:focus-visible {
-    outline: 3px solid #69b6be;
+    outline: 3px solid #4b6bff;
     outline-offset: 3px;
   }
 }

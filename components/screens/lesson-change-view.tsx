@@ -80,7 +80,7 @@ export function LessonChangeView({
           </dl>
           {(lesson.previousRoom !== null ||
             lesson.previousTeachers !== null) && (
-            <div className="mt-4 rounded-[10px] border border-[#d6e9e1] bg-[#edf6f3] p-4 text-xs text-teal-dark">
+            <div className="mt-4 rounded-[10px] border border-[#c9d2ff] bg-[#e8ecff] p-4 text-xs text-brand-dark">
               <div className="mb-1 font-semibold">取り込んだときの内容</div>
               {lesson.previousRoom !== null && (
                 <div>教室: {roomText(lesson.previousRoom)}</div>
@@ -128,7 +128,7 @@ export function LessonChangeView({
                 defaultValue={teachers
                   .filter((teacher) => lesson.teachers.includes(teacher.name))
                   .map((teacher) => teacher.id)}
-                className="h-32 w-full rounded-[7px] border border-[#d8e3eb] bg-white px-2 py-1.5 text-xs font-normal text-ink"
+                className="h-32 w-full rounded-[7px] border border-[#6f7b91] bg-white px-2 py-1.5 text-xs font-normal text-ink"
               >
                 {teachers.map((teacher) => (
                   <option
@@ -194,7 +194,7 @@ export function LessonAddView({
             <input
               readOnly
               value={className}
-              className={`${fieldClass} bg-[#f4f7f9] text-[#7b8d99]`}
+              className={`${fieldClass} bg-[#f0f3fa] text-[#586579]`}
             />
           </Field>
           <Field label="日付" required>

@@ -59,7 +59,7 @@ export default function DevHome() {
                 <li key={href}>
                   <Link
                     href={`/_dev/${href}`}
-                    className="text-teal-dark underline"
+                    className="text-brand-dark underline"
                   >
                     {label}
                   </Link>

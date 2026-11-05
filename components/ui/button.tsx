@@ -2,11 +2,11 @@ import Link from "next/link";
 import type { ComponentProps } from "react";
 
 const VARIANTS = {
-  default: "border-line bg-white hover:border-[#bdced8] hover:bg-[#f7f9fa]",
-  primary: "border-teal bg-teal text-white hover:bg-teal-dark",
+  default: "border-line bg-white hover:border-[#aab4c8] hover:bg-[#f6f8fc]",
+  primary: "border-brand bg-brand text-white hover:bg-brand-dark",
   navy: "border-navy bg-navy text-white",
-  subtle: "border-transparent bg-transparent text-teal-dark",
-  danger: "border-[#edcccc] bg-white text-red-ink",
+  subtle: "border-transparent bg-transparent text-brand-dark",
+  danger: "border-[#e8b4bb] bg-white text-red-ink",
 } as const;
 
 const SIZES = {
