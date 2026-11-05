@@ -75,8 +75,10 @@ export function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     {
-      // Not for static files or prefetches; they need no CSP and no login.
-      source: "/((?!_next/static|_next/image|favicon.ico).*)",
+      // Not for static files, the app icons or prefetches; they need no CSP and no login
+      // (the tab icon is also requested on the sign-in screen).
+      source:
+        "/((?!_next/static|_next/image|favicon.ico|icon.svg|apple-icon.png).*)",
       missing: [
         { type: "header", key: "next-router-prefetch" },
         { type: "header", key: "purpose", value: "prefetch" },
