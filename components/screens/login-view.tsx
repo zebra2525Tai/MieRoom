@@ -24,7 +24,7 @@ export function LoginView({
           <br />
           先生の居場所も。
         </h1>
-        <p className="mt-4 text-xs leading-loose text-[#c9d2f5] md:mt-5 md:text-[13px]">
+        <p className="mt-4 text-xs leading-loose text-[#cfd7ff] md:mt-5 md:text-[13px]">
           学校の予定を、分かりやすく。
           <br />
           教室の使用状況と先生の位置をまとめて確認できます。

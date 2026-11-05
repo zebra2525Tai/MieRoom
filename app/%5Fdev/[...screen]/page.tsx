@@ -113,7 +113,7 @@ export default async function DevScreenPage({
 
   return (
     <div>
-      <div className="flex flex-wrap items-center gap-3 border-b border-[#d5dae6] bg-[#edf0f5] px-4 py-1.5 text-[11px] text-[#3f4d63] print:hidden">
+      <div className="flex flex-wrap items-center gap-3 border-b border-[#d5dae6] bg-[#edf0f5] px-4 py-1.5 text-[11px] text-[#4a576c] print:hidden">
         <span className="font-bold">見本(架空のデータ)</span>
         <Link href="/_dev" className="underline">
           画面の一覧

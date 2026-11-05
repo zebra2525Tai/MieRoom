@@ -80,7 +80,7 @@ export function LessonChangeView({
           </dl>
           {(lesson.previousRoom !== null ||
             lesson.previousTeachers !== null) && (
-            <div className="mt-4 rounded-[10px] border border-[#c9d2ff] bg-[#e8ecff] p-4 text-xs text-brand-dark">
+            <div className="mt-4 rounded-[10px] border border-[#cfd7ff] bg-[#e8ecff] p-4 text-xs text-brand-dark">
               <div className="mb-1 font-semibold">取り込んだときの内容</div>
               {lesson.previousRoom !== null && (
                 <div>教室: {roomText(lesson.previousRoom)}</div>
@@ -194,7 +194,7 @@ export function LessonAddView({
             <input
               readOnly
               value={className}
-              className={`${fieldClass} bg-[#f0f3fa] text-[#586579]`}
+              className={`${fieldClass} bg-[#edf0f5] text-[#586579]`}
             />
           </Field>
           <Field label="日付" required>

@@ -179,7 +179,7 @@ export function ReservationFormView({
               <input
                 readOnly
                 value={mode === "apply" ? "ログイン中の人" : "ログイン中の先生"}
-                className={`${fieldClass} bg-[#f0f3fa] text-[#586579]`}
+                className={`${fieldClass} bg-[#edf0f5] text-[#586579]`}
               />
             </Field>
             <Field label="備考" full help="100文字まで">

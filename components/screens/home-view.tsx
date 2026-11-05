@@ -36,7 +36,7 @@ function NextLessonCard({
 }) {
   const next = lessons.kind === "ready" ? lessons.next : null;
   return (
-    <Card className="border-[#cfd7ff] bg-linear-to-r from-[#eef1ff] to-[#f7f8ff] p-6 sm:px-7">
+    <Card className="border-[#cfd7ff] bg-linear-to-r from-[#f2f5ff] to-[#f2f5ff] p-6 sm:px-7">
       <div className="flex items-center gap-2 text-[11px] font-bold tracking-wide text-brand">
         <Icon name="calendar" size={15} />
         次の授業

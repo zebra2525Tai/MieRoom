@@ -47,7 +47,7 @@ function Steps() {
         <div key={label} className="contents">
           {index > 0 && <div className="h-px min-w-6 flex-1 bg-[#d5dae6]" />}
           <div
-            className={`flex items-center gap-2 text-xs ${index === 0 ? "font-bold text-brand-dark" : "text-[#667389]"}`}
+            className={`flex items-center gap-2 text-xs ${index === 0 ? "font-bold text-brand-dark" : "text-[#586579]"}`}
           >
             <span
               className={`grid h-[27px] w-[27px] place-items-center rounded-full text-[11px] font-bold ${

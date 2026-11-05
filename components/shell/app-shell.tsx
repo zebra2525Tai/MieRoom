@@ -63,7 +63,7 @@ export function AppShell({
         <nav className="flex flex-col gap-4">
           {sections.map((section) => (
             <div key={section.label}>
-              <div className="mx-3 mb-1.5 text-[11px] font-bold tracking-widest text-[#667389]">
+              <div className="mx-3 mb-1.5 text-[11px] font-bold tracking-widest text-[#586579]">
                 {section.label}
               </div>
               {section.items.map((item) => {
@@ -78,7 +78,7 @@ export function AppShell({
                     }
                     aria-current={active ? "page" : undefined}
                     onClick={() => setMenuOpen(false)}
-                    className={`my-0.5 flex items-center gap-3 rounded-[9px] px-3 py-2.5 font-medium transition-colors hover:bg-[#f0f3fa] hover:text-navy ${
+                    className={`my-0.5 flex items-center gap-3 rounded-[9px] px-3 py-2.5 font-medium transition-colors hover:bg-[#edf0f5] hover:text-navy ${
                       active
                         ? "bg-[#e8ecff] font-bold text-brand-dark"
                         : "text-[#4a576c]"

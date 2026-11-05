@@ -44,7 +44,7 @@ function LocationBox({ location }: { location: TeacherLocation }) {
       <Icon
         name={location.kind === "room" ? "pin" : "info"}
         size={23}
-        className="text-[#667389]"
+        className="text-[#586579]"
       />
     </div>
   );

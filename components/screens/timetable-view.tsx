@@ -77,7 +77,7 @@ function DayView({
           <Card
             key={period.no}
             className={`grid grid-cols-[60px_minmax(0,1fr)_64px] items-center gap-3 px-3 py-4 sm:grid-cols-[96px_minmax(0,1fr)_140px] sm:gap-4 sm:px-6 sm:py-5 ${
-              running ? "border-[#8ea0ff] bg-[#f2f5ff]" : ""
+              running ? "border-[#5d6ee1] bg-[#f2f5ff]" : ""
             }`}
           >
             <div className="text-xs font-bold text-[#4a576c]">
@@ -262,7 +262,7 @@ function MonthView({
           return (
             <div
               key={day.date}
-              className={`min-h-[104px] border-b border-r border-[#e3e7f0] p-2 text-[11px] ${
+              className={`min-h-[104px] border-b border-r border-[#d5dae6] p-2 text-[11px] ${
                 outside ? "bg-[#f6f8fc] text-[#8a96ad]" : ""
               }`}
             >

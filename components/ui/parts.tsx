@@ -8,7 +8,7 @@ const BADGE_KINDS = {
   available: "bg-[#e0f2ee] text-[#00695c]",
   busy: "bg-[#e8ecff] text-[#1e36d6]",
   warning: "bg-amber-soft text-amber-ink",
-  neutral: "bg-[#edf0f5] text-[#4a5568]",
+  neutral: "bg-[#edf0f5] text-[#4a576c]",
   error: "bg-red-soft text-red-ink",
 } as const;
 
@@ -70,7 +70,7 @@ export function PageHeading({
 const CALLOUT_KINDS = {
   info: "bg-[#e8ecff] text-[#14246b]",
   warning: "bg-[#fff1d6] text-[#7a4400]",
-  neutral: "bg-[#edf0f5] text-[#4a5568]",
+  neutral: "bg-[#edf0f5] text-[#4a576c]",
   error: "bg-red-soft text-red-ink",
 } as const;
 
@@ -105,9 +105,9 @@ export function EmptyState({
   action?: ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-dashed border-[#b8c1d3] bg-white px-5 py-12 text-center text-muted">
+    <div className="rounded-xl border border-dashed border-[#8a96ad] bg-white px-5 py-12 text-center text-muted">
       <Icon name="search" size={28} className="mx-auto" />
-      <h3 className="mb-1 mt-2 font-bold text-[#3f4d63]">{title}</h3>
+      <h3 className="mb-1 mt-2 font-bold text-[#4a576c]">{title}</h3>
       {children && <p className="text-xs">{children}</p>}
       {action && <div className="mt-4">{action}</div>}
     </div>
@@ -236,7 +236,7 @@ export function Th({
 export function Td({ className = "", ...props }: ComponentProps<"td">) {
   return (
     <td
-      className={`border-b border-[#e3e7f0] px-4 py-3.5 align-middle ${className}`}
+      className={`border-b border-[#d5dae6] px-4 py-3.5 align-middle ${className}`}
       {...props}
     />
   );
