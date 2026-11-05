@@ -3,7 +3,8 @@ import type { ComponentProps } from "react";
 
 const VARIANTS = {
   default: "border-line bg-white hover:border-[#aab4c8] hover:bg-[#f6f8fc]",
-  primary: "border-brand bg-brand text-white hover:bg-brand-dark",
+  primary:
+    "border-action bg-action text-white hover:border-brand hover:bg-brand",
   navy: "border-navy bg-navy text-white",
   subtle: "border-transparent bg-transparent text-brand-dark",
   danger: "border-[#e8b4bb] bg-white text-red-ink",
