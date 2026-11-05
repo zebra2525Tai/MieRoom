@@ -10,14 +10,14 @@ export function BrandMark() {
       focusable="false"
     >
       <defs>
-        <linearGradient id="mieroom-mark-bgb" x1="0" y1="0" x2=".3" y2="1">
+        <linearGradient id="mieroom-mark-gDb" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#4B6BFF" />
           <stop offset="1" stopColor="#1E36D6" />
         </linearGradient>
-        <radialGradient id="mieroom-mark-gwb" cx=".22" cy=".12" r=".75">
-          <stop offset="0" stopColor="#fff" stopOpacity=".2" />
-          <stop offset="1" stopColor="#fff" stopOpacity="0" />
-        </radialGradient>
+        <linearGradient id="mieroom-mark-gTb" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#8fa3ff" />
+          <stop offset="1" stopColor="#7482e6" />
+        </linearGradient>
         <linearGradient id="mieroom-mark-gLb" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#fff" />
           <stop offset="1" stopColor="#dde1f9" />
@@ -77,89 +77,72 @@ export function BrandMark() {
             floodOpacity=".26"
           />
         </filter>
-        <clipPath id="mieroom-mark-cpb">
-          <rect width="64" height="64" rx="15" />
-        </clipPath>
       </defs>
-      <g clipPath="url(#mieroom-mark-cpb)">
-        <rect width="64" height="64" fill="url(#mieroom-mark-bgb)" />
-        <rect width="64" height="64" fill="url(#mieroom-mark-gwb)" />
-        <g filter="url(#mieroom-mark-shb)">
-          <g transform="translate(32 32) scale(0.86) translate(-33.5 -31.6)">
-            <rect
-              x="40"
-              y="20"
-              width="20"
-              height="42"
-              rx="4.6"
-              fill="url(#mieroom-mark-gLb)"
-              fillOpacity=".78"
+      <g filter="url(#mieroom-mark-shb)">
+        <g transform="translate(32 32) scale(1.0) translate(-33.5 -31.5)">
+          <rect
+            x="40"
+            y="20"
+            width="20"
+            height="42"
+            rx="4.6"
+            fill="url(#mieroom-mark-gDb)"
+            fillOpacity=".72"
+          />
+          <rect
+            x="4"
+            y="20"
+            width="40"
+            height="42"
+            rx="4.6"
+            fill="url(#mieroom-mark-gDb)"
+            stroke="rgba(255,255,255,.34)"
+            strokeWidth=".8"
+          />
+          <rect
+            x="9"
+            y="25"
+            width="30"
+            height="32"
+            rx="4.2"
+            fill="#fff"
+            fillOpacity=".8"
+          />
+          <rect
+            x="9"
+            y="25"
+            width="30"
+            height="32"
+            rx="4.2"
+            fill="url(#mieroom-mark-glb)"
+          />
+          <g filter="url(#mieroom-mark-fbb)">
+            <circle
+              cx="24"
+              cy="31.40"
+              r="5.40"
+              fill="#12238F"
+              fillOpacity="0.95"
             />
-            <rect
-              x="4"
-              y="20"
-              width="40"
-              height="42"
-              rx="4.6"
-              fill="url(#mieroom-mark-gLb)"
-              stroke="rgba(255,255,255,.34)"
-              strokeWidth=".8"
+            <path
+              d="M12.00 56.00Q12.00 40.00 24 40.00Q36.00 40.00 36.00 56.00Z"
+              fill="#12238F"
+              fillOpacity="0.95"
             />
-            <rect
-              x="9"
-              y="25"
-              width="30"
-              height="32"
-              rx="4.2"
-              fill="#fff"
-              fillOpacity=".8"
-            />
-            <rect
-              x="9"
-              y="25"
-              width="30"
-              height="32"
-              rx="4.2"
-              fill="url(#mieroom-mark-glb)"
-            />
-            <g filter="url(#mieroom-mark-fbb)">
-              <circle
-                cx="24"
-                cy="31.40"
-                r="5.40"
-                fill="#12238F"
-                fillOpacity="0.95"
-              />
+          </g>
+          <g filter="url(#mieroom-mark-psb)">
+            <g transform="translate(37 -1.5) scale(1.3)">
               <path
-                d="M12.00 56.00Q12.00 40.00 24 40.00Q36.00 40.00 36.00 56.00Z"
-                fill="#12238F"
-                fillOpacity="0.95"
+                d="M20 10c0 6-8 11-8 11S4 16 4 10a8 8 0 1 1 16 0Z"
+                fill="url(#mieroom-mark-gRb)"
+                stroke="rgba(255,255,255,0.4)"
+                strokeWidth="0.7"
               />
-            </g>
-            <g filter="url(#mieroom-mark-psb)">
-              <g transform="translate(37 -1.5) scale(1.3)">
-                <path
-                  d="M20 10c0 6-8 11-8 11S4 16 4 10a8 8 0 1 1 16 0Z"
-                  fill="url(#mieroom-mark-gRb)"
-                  stroke="rgba(255,255,255,0.4)"
-                  strokeWidth="0.7"
-                />
-                <circle cx="12" cy="10" r="3.1" fill="#fff" />
-              </g>
+              <circle cx="12" cy="10" r="3.1" fill="#fff" />
             </g>
           </g>
         </g>
       </g>
-      <rect
-        x=".6"
-        y=".6"
-        width="62.8"
-        height="62.8"
-        rx="14.4"
-        fill="none"
-        stroke="rgba(255,255,255,.12)"
-        strokeWidth="1.2"
-      />
     </svg>
   );
 }
