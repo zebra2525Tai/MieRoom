@@ -2,3 +2,5 @@
 *.ico binary
 *.png binary
 *.jpg binary
+# Demo CSVs keep their BOM and CRLF (the tool and the import expect them).
+demo-data/**/*.csv -text
