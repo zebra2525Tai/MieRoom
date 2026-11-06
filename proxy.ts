@@ -10,14 +10,14 @@ import type { NextRequest } from "next/server";
 // valid). The real permission checks run on the server in lib/server/session.ts,
 // inside each page and each server function.
 
-// Places that have their own way to authenticate (合言葉つきURL, センサーの鍵, Cron の鍵)
+// Places that have their own way to authenticate (合言葉つきURL, ゲートウェイの鍵, Cron の鍵)
 // or must be reachable before signing in. /_dev is switched off by ENABLE_DEV_PAGES
 // in its own layout, so it is a 404 wherever that is not "true" (◆3 H).
 const PUBLIC_PREFIXES = [
   "/login",
   "/api/auth",
   "/monitor",
-  "/api/sensor",
+  "/api/gateway",
   "/api/cron",
   "/_dev",
   "/robots.txt",

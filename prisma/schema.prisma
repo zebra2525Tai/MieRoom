@@ -110,6 +110,7 @@ model Teacher {
 
   subjectTeachers SubjectTeacher[]
   lessonTeachers  LessonTeacher[]
+  location        Location?
 
   @@map("teachers")
 }
@@ -188,6 +189,7 @@ model Room {
   receivers    Receiver[]
   subjectRooms SubjectRoom[]
   lessons      Lesson[]
+  locations    Location[]
 
   @@map("rooms")
 }
@@ -348,4 +350,32 @@ model MonthStatus {
 
   @@id([classId, month])
   @@map("month_status")
+}
+
+// ---- 先生の位置 (外部設計書 11章 E17, R7) ------------------------------------------------
+// 位置は最新の1件だけ持ち、履歴は持たない (12章)。イベントの表も作らない: 同じイベントの
+// 再送は、lastEventId と lastOccurredAt で見分ける (発生時刻が同じか古いイベントは反映しない)。
+// 位置の判定はゲートウェイ (校内PC) が行い、システムは確定した状態を受けて保存する。
+
+enum LocationStatus {
+  DETECTED // 教室にいる
+  UNKNOWN // 最終検出から15秒
+  OFFLINE // 最終検出から60秒
+
+  @@map("location_status")
+}
+
+model Location {
+  teacherId      String         @id @db.Uuid
+  roomId         String?        @db.Uuid
+  status         LocationStatus
+  lastEventId    String         @db.Uuid
+  lastOccurredAt DateTime
+  updatedAt      DateTime
+
+  // 講師を消すと位置も消える (R5-7)。教室を消すと、教室だけが空になる。
+  teacher Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  room    Room?   @relation(fields: [roomId], references: [id], onDelete: SetNull)
+
+  @@map("locations")
 }

@@ -1,5 +1,6 @@
 import "server-only";
 import type { ClosureItem } from "@/lib/domain/closures";
+import { teacherLocationView } from "@/lib/domain/gateway-event";
 import { ALL_FREE, type RoomRow } from "@/lib/domain/room-status";
 import { dateColumnToText, textToDateColumn } from "@/lib/domain/school-date";
 import type { TeacherRow } from "@/components/screens/teachers-view";
@@ -104,8 +105,7 @@ export async function loadRoomList(): Promise<RoomRow[]> {
 }
 
 /**
- * S05. 位置の表(E17)がまだないので、タグのある先生は「検知エリア外」(R7-2)。
- * タグIDそのものは画面に渡さない。
+ * S05. 位置は locations (E17) の最新の1件 (R7-2)。タグIDそのものは画面に渡さない。
  */
 export async function loadTeacherDirectory(
   year: number,
@@ -122,6 +122,9 @@ export async function loadTeacherDirectory(
         id: true,
         displayName: true,
         tagId: true,
+        location: {
+          select: { status: true, room: { select: { name: true } } },
+        },
         subjectTeachers: {
           where: { class: inYear(year) },
           select: {
@@ -155,7 +158,15 @@ export async function loadTeacherDirectory(
   return teachers.map((teacher) => ({
     id: teacher.id,
     name: teacher.displayName,
-    location: teacher.tagId ? { kind: "out-of-area" } : { kind: "no-tag" },
+    location: teacherLocationView({
+      tagId: teacher.tagId,
+      location: teacher.location
+        ? {
+            status: teacher.location.status,
+            roomName: teacher.location.room?.name ?? null,
+          }
+        : null,
+    }),
     assignments: teacher.subjectTeachers
       .map((item) => ({
         className: item.class.name,
