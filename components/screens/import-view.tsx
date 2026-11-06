@@ -40,14 +40,18 @@ const IMPORTED_LABEL = {
   done: "取込済み",
 } as const;
 
+// On a phone the three labels do not fit in one line, so each label goes under
+// its number there instead of breaking in the middle of a word.
 function Steps() {
   return (
-    <div className="mb-6 mt-2 flex max-w-[680px] items-center gap-3">
+    <div className="mb-6 mt-2 flex max-w-[680px] items-start gap-3 sm:items-center">
       {["ファイルを選ぶ", "確認する", "取り込む"].map((label, index) => (
         <div key={label} className="contents">
-          {index > 0 && <div className="h-px min-w-6 flex-1 bg-[#d5dae6]" />}
+          {index > 0 && (
+            <div className="mt-[13px] h-px min-w-6 flex-1 bg-[#d5dae6] sm:mt-0" />
+          )}
           <div
-            className={`flex items-center gap-2 text-xs ${index === 0 ? "font-bold text-brand-dark" : "text-[#586579]"}`}
+            className={`flex flex-col items-center gap-1.5 whitespace-nowrap text-xs sm:flex-row sm:gap-2 ${index === 0 ? "font-bold text-brand-dark" : "text-[#586579]"}`}
           >
             <span
               className={`grid h-[27px] w-[27px] place-items-center rounded-full text-[11px] font-bold ${
