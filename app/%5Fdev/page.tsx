@@ -35,6 +35,7 @@ const SCREENS: { title: string; items: [string, string][] }[] = [
       ["s22", "S22 紐づけ"],
       ["s23", "S23 休み・行事"],
       ["s24", "S24 CSV書き出し"],
+      ["s24-error", "S24 CSV書き出し(エラーあり)"],
       ["s25", "S25 タグ・受信機"],
       ["s26", "S26 削除管理"],
       ["s27", "S27 モニターURL"],

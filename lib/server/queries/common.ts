@@ -10,7 +10,7 @@ import { getDb } from "../db";
 // Only the columns a screen shows are selected. Callers check the role first.
 
 /** 年度 Y に存在していて、有効なクラス (R5-4, R6-3). */
-function inYear(year: number) {
+export function inYear(year: number) {
   return {
     active: true,
     startYear: { lte: year },
