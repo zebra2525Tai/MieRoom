@@ -24,6 +24,12 @@ export function schoolToday(now: Date): string {
   return `${jst.getFullYear()}-${pad(jst.getMonth() + 1)}-${pad(jst.getDate())}`;
 }
 
+/** 11/5 14:30 — a moment, in Japan time. */
+export function schoolDateTimeText(at: Date): string {
+  const jst = new TZDate(at, SCHOOL_TIME_ZONE);
+  return `${jst.getMonth() + 1}/${jst.getDate()} ${jst.getHours()}:${pad(jst.getMinutes())}`;
+}
+
 /** Minutes since midnight in Japan. */
 export function schoolMinutes(now: Date): number {
   const jst = new TZDate(now, SCHOOL_TIME_ZONE);

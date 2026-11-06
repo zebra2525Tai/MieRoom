@@ -1,8 +1,5 @@
-import { Button } from "@/components/ui/button";
-import { Icon } from "@/components/ui/icon";
 import {
   Badge,
-  NotReadyNotice,
   PageHeading,
   SectionHead,
   TableWrap,
@@ -12,6 +9,7 @@ import {
 } from "@/components/ui/parts";
 import type { MonthWindow } from "@/lib/domain/import-window";
 import { formatMonth } from "@/lib/domain/school-date";
+import { ImportPanel, UnlockButton } from "./import-panel";
 
 export type ImportCell = {
   /** 未取込 until something was imported. null: the class does not exist that month. */
@@ -19,6 +17,8 @@ export type ImportCell = {
   importedText?: string;
   /** システムで変更した授業の件数 (R3-12) */
   changedLessons?: number;
+  /** 例外解除中 (R3-5) */
+  unlocked?: boolean;
 };
 
 export type ImportRow = {
@@ -40,30 +40,6 @@ const IMPORTED_LABEL = {
   done: "取込済み",
 } as const;
 
-function Steps() {
-  return (
-    <div className="mb-6 mt-2 flex max-w-[680px] items-center gap-3">
-      {["ファイルを選ぶ", "確認する", "取り込む"].map((label, index) => (
-        <div key={label} className="contents">
-          {index > 0 && <div className="h-px min-w-6 flex-1 bg-[#d5dae6]" />}
-          <div
-            className={`flex items-center gap-2 text-xs ${index === 0 ? "font-bold text-brand-dark" : "text-[#586579]"}`}
-          >
-            <span
-              className={`grid h-[27px] w-[27px] place-items-center rounded-full text-[11px] font-bold ${
-                index === 0 ? "bg-[#e8ecff] text-brand-dark" : "bg-[#edf0f5]"
-              }`}
-            >
-              {index + 1}
-            </span>
-            {label}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 // S20 時間割の取り込み
 export function ImportView({
   months,
@@ -81,35 +57,7 @@ export function ImportView({
         title="時間割の取り込み"
         description="担任が作った取込用CSVを、まとめて確かめてから取り込みます。"
       />
-      <NotReadyNotice>
-        画面の形を確かめる段階です。授業の表ができてから、取り込めるようになります。
-      </NotReadyNotice>
-      <Steps />
-
-      <div className="rounded-xl border-[1.5px] border-dashed border-[#8a96ad] bg-[#f6f8fc] px-6 py-10 text-center">
-        <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-[14px] bg-[#e8ecff] text-[#4a576c]">
-          <Icon name="upload" size={27} />
-        </div>
-        <h2 className="text-[17px] font-bold">取込用CSVを選ぶ</h2>
-        <p className="mb-4 mt-2 text-xs text-muted">
-          複数まとめて選べます(1回50ファイル、1ファイル1MB、合計4MBまで)。
-          <br />
-          エラーが1つでもあると、何も取り込みません。
-        </p>
-        <div className="flex flex-wrap items-center justify-center gap-2">
-          <input
-            type="file"
-            accept=".csv"
-            multiple
-            aria-label="取込用CSV"
-            className="max-w-full text-xs"
-          />
-          <Button variant="primary" disabled>
-            確認する
-            <Icon name="arrow" size={15} />
-          </Button>
-        </div>
-      </div>
+      <ImportPanel />
 
       <SectionHead
         title="取り込みの状況"
@@ -161,11 +109,18 @@ export function ImportView({
                             システムで変更あり({cell.changedLessons}件)
                           </Badge>
                         )}
-                      {index === 0 && windows[0] === "closed" && (
-                        <Button size="sm" disabled>
-                          例外解除
-                        </Button>
+                      {cell.unlocked && (
+                        <Badge kind="warning">例外解除中</Badge>
                       )}
+                      {index === 0 &&
+                        windows[0] === "closed" &&
+                        !cell.unlocked && (
+                          <UnlockButton
+                            classId={row.id}
+                            className={row.name}
+                            month={months[0]}
+                          />
+                        )}
                     </div>
                   )}
                 </Td>

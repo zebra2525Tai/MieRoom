@@ -12,11 +12,8 @@ import {
   schoolMinutes,
   schoolToday,
 } from "@/lib/domain/school-date";
-import {
-  listClassesForYear,
-  listSchoolClosures,
-  loadRoomRows,
-} from "@/lib/server/queries/common";
+import { listSchoolClosures } from "@/lib/server/queries/common";
+import { loadRoomRows } from "@/lib/server/queries/lessons";
 import { requireUser } from "@/lib/server/session";
 import { one } from "@/lib/url";
 
@@ -43,9 +40,8 @@ export default async function RoomsPage({ searchParams }: PageProps<"/rooms">) {
       : null;
   const onlyFree = one(params.all) !== "1";
 
-  const [rooms, classes, closures] = await Promise.all([
-    loadRoomRows(),
-    listClassesForYear(fiscalYearOfDate(date)),
+  const [{ rooms, undecidedClasses }, closures] = await Promise.all([
+    loadRoomRows(date, fiscalYearOfDate(date)),
     // Far enough back to step over the summer holidays when looking for 営業日.
     listSchoolClosures(addDays(date, -60), date),
   ]);
@@ -66,8 +62,7 @@ export default async function RoomsPage({ searchParams }: PageProps<"/rooms">) {
       layout={one(params.layout) === "table" ? "table" : "cards"}
       rooms={filterRooms(rooms, { periodNo, onlyFree, kind, building })}
       buildings={buildings}
-      // 取り込みの状況(E12)がまだないので、どのクラスも未入力。
-      undecidedClasses={classes.map((item) => item.name)}
+      undecidedClasses={undecidedClasses}
       canApply={checkApplicationDate(date, now, closures).ok}
     />
   );

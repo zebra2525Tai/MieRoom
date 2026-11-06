@@ -8,6 +8,7 @@ import {
 import { fiscalYearOfDate, schoolToday } from "@/lib/domain/school-date";
 import { MESSAGES, SYSTEM_ERROR_MESSAGE } from "@/lib/messages";
 import { loadExportSource } from "@/lib/server/queries/export";
+import { fromThisSite } from "@/lib/server/same-site";
 import { getCurrentUser, hasRole } from "@/lib/server/session";
 
 // S24 の「8つのCSVを書き出す」。ZIP を返すので、画面ではなくここで受ける。
@@ -21,24 +22,6 @@ function text(status: number, body: string): Response {
       "Cache-Control": "no-store",
     },
   });
-}
-
-/**
- * Is the request from a page of this site? The browser sets Sec-Fetch-Site and a page
- * cannot change it. Origin is not enough: with Referrer-Policy no-referrer (set for the
- * whole site) a form on this site sends "Origin: null". Origin is the fallback for a
- * browser that sends no Sec-Fetch-Site.
- */
-function fromThisSite(request: NextRequest): boolean {
-  const site = request.headers.get("sec-fetch-site");
-  if (site !== null) return site === "same-origin";
-  const origin = request.headers.get("origin");
-  if (origin === null) return false;
-  try {
-    return new URL(origin).host === request.headers.get("host");
-  } catch {
-    return false;
-  }
 }
 
 export async function POST(request: NextRequest): Promise<Response> {

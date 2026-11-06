@@ -93,7 +93,7 @@ export type MasterIssue = {
 const length = (value: string) => [...value].length;
 
 /** Room names are written with half-width digits (R5-1, the same as the Excel tool). */
-function normalizeRoomName(value: string): string {
+export function normalizeRoomName(value: string): string {
   return value.replace(/[０-９]/g, (c) =>
     String.fromCharCode(c.charCodeAt(0) - 0xfee0),
   );

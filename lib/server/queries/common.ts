@@ -1,8 +1,7 @@
 import "server-only";
-import { closureNamesOn, type ClosureItem } from "@/lib/domain/closures";
+import type { ClosureItem } from "@/lib/domain/closures";
 import { ALL_FREE, type RoomRow } from "@/lib/domain/room-status";
 import { dateColumnToText, textToDateColumn } from "@/lib/domain/school-date";
-import type { TimetableDay } from "@/components/screens/lesson-parts";
 import type { TeacherRow } from "@/components/screens/teachers-view";
 import { getDb } from "../db";
 
@@ -86,31 +85,10 @@ export async function listClosuresForClass(
 }
 
 /**
- * The days of S03. 授業の表(E10)と取り込みの状況(E12)がまだないので、どの日も未定
- * (R3-7)。休み・行事だけが実際のデータ。
+ * The rooms for the lists and forms that do not show the slots of a day (S06, S11, S12,
+ * S13): every slot is free. S04 reads the slots from the timetable (lessons.ts).
  */
-export async function loadTimetableDays(
-  dates: string[],
-  classId: string | null,
-): Promise<TimetableDay[]> {
-  const closures = await listClosuresForClass(
-    dates[0],
-    dates[dates.length - 1],
-    classId,
-  );
-  return dates.map((date) => ({
-    date,
-    entered: false,
-    closures: closureNamesOn(date, closures),
-    lessons: [],
-  }));
-}
-
-/**
- * The rooms of S04. 授業・予約・使用止めの表がまだないので、どの枠も空き。画面には、
- * 全クラスが未入力という警告(MW001)が一緒に出る。
- */
-export async function loadRoomRows(): Promise<RoomRow[]> {
+export async function loadRoomList(): Promise<RoomRow[]> {
   const rows = await getDb().room.findMany({
     where: { active: true },
     select: {

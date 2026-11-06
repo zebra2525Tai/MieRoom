@@ -5,12 +5,15 @@ import type {
   MasterData,
   MasterTab,
 } from "@/components/screens/admin-views";
-import type { ImportRow } from "@/components/screens/import-view";
+import type { ImportCell, ImportRow } from "@/components/screens/import-view";
 import {
+  addMonths,
   dateColumnToText,
   fiscalYearOfDate,
   formatDate,
   formatMonth,
+  schoolDateTimeText,
+  textToDateColumn,
 } from "@/lib/domain/school-date";
 import { getDb } from "../db";
 import { overlapping } from "./common";
@@ -203,26 +206,82 @@ export async function loadClosuresOfYear(
 export async function loadImportRows(
   months: [string, string],
 ): Promise<ImportRow[]> {
+  const db = getDb();
   const years = months.map((month) => fiscalYearOfDate(`${month}-01`));
-  const classes = await getDb().schoolClass.findMany({
-    where: { active: true },
-    select: { id: true, name: true, startYear: true, endYear: true },
-    orderBy: { name: "asc" },
-  });
+  const key = (month: string) => month.replace("-", "");
+  const [classes, statuses, changed] = await Promise.all([
+    db.schoolClass.findMany({
+      where: { active: true },
+      select: { id: true, name: true, startYear: true, endYear: true },
+      orderBy: { name: "asc" },
+    }),
+    // The month before is read too: its 翌月の最終入力日 makes the first column 仮の時間割 (R3-7).
+    db.monthStatus.findMany({
+      where: { month: { in: [addMonths(months[0], -1), ...months].map(key) } },
+      select: {
+        classId: true,
+        month: true,
+        importedAt: true,
+        nextLastInputDate: true,
+        exceptionUnlocked: true,
+      },
+    }),
+    // Lessons changed in the system (R3-11) in the two months (MW703, R3-12).
+    db.lesson.findMany({
+      where: {
+        date: {
+          gte: textToDateColumn(`${months[0]}-01`),
+          lt: textToDateColumn(`${addMonths(months[1], 1)}-01`),
+        },
+        OR: [
+          { origin: "EXTRA" },
+          { cancelled: true },
+          { changedAt: { not: null } },
+        ],
+      },
+      select: { classId: true, date: true },
+    }),
+  ]);
   const existsIn = (
     item: { startYear: number; endYear: number | null },
     year: number,
   ) =>
     item.startYear <= year && (item.endYear === null || year <= item.endYear);
+  const statusOf = new Map(
+    statuses.map((row) => [`${row.classId}|${row.month}`, row]),
+  );
+  const changedOf = new Map<string, number>();
+  for (const lesson of changed) {
+    const month = dateColumnToText(lesson.date).slice(0, 7);
+    const id = `${lesson.classId}|${key(month)}`;
+    changedOf.set(id, (changedOf.get(id) ?? 0) + 1);
+  }
+
   return classes
     .filter((item) => years.some((year) => existsIn(item, year)))
     .map((item) => ({
       id: item.id,
       name: item.name,
-      cells: [
-        { imported: existsIn(item, years[0]) ? "none" : null },
-        { imported: existsIn(item, years[1]) ? "none" : null },
-      ],
+      cells: months.map((month, index): ImportCell => {
+        if (!existsIn(item, years[index])) return { imported: null };
+        const own = statusOf.get(`${item.id}|${key(month)}`);
+        const before = statusOf.get(`${item.id}|${key(addMonths(month, -1))}`);
+        const changedLessons = changedOf.get(`${item.id}|${key(month)}`);
+        return {
+          imported:
+            own?.importedAt != null
+              ? "done"
+              : before?.importedAt != null && before.nextLastInputDate !== null
+                ? "provisional"
+                : "none",
+          importedText:
+            own?.importedAt != null
+              ? `${schoolDateTimeText(own.importedAt)} に取り込み`
+              : undefined,
+          changedLessons,
+          unlocked: own?.exceptionUnlocked === true,
+        };
+      }) as [ImportCell, ImportCell],
     }));
 }
 

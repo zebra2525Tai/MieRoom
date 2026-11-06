@@ -109,6 +109,7 @@ model Teacher {
   updatedAt   DateTime @updatedAt
 
   subjectTeachers SubjectTeacher[]
+  lessonTeachers  LessonTeacher[]
 
   @@map("teachers")
 }
@@ -150,6 +151,8 @@ model SchoolClass {
   subjectTeachers SubjectTeacher[]
   subjectRooms    SubjectRoom[]
   closures        Closure[]
+  lessons         Lesson[]
+  monthStatuses   MonthStatus[]
 
   @@map("classes")
 }
@@ -165,6 +168,7 @@ model Subject {
   classSubjects   ClassSubject[]
   subjectTeachers SubjectTeacher[]
   subjectRooms    SubjectRoom[]
+  lessons         Lesson[]
 
   @@map("subjects")
 }
@@ -183,6 +187,7 @@ model Room {
   homeClasses  SchoolClass[] @relation("HomeRoom")
   receivers    Receiver[]
   subjectRooms SubjectRoom[]
+  lessons      Lesson[]
 
   @@map("rooms")
 }
@@ -262,4 +267,85 @@ model Closure {
   class SchoolClass? @relation(fields: [classId], references: [id], onDelete: Cascade)
 
   @@map("closures")
+}
+
+// ---- 時間割 (外部設計書 11章 E10〜E12, 07章 R3) ---------------------------------------
+// 時刻は「0時からの分」の整数 (時限は R3-1 の表)。日付は日付型で、日本時間の日付として扱う。
+
+enum LessonKind {
+  FIXED // 教室が決まっている
+  ROOM_TBD // 教室未定 (roomName は空)
+
+  @@map("lesson_kind")
+}
+
+enum LessonOrigin {
+  IMPORT // 取込用 CSV
+  EXTRA // 補講 (システムで足した。R3-11)
+
+  @@map("lesson_origin")
+}
+
+// E10 授業。取り込んだときの表示名も持つので、マスタを消しても過去の授業は名前で出せる。
+// 取込元 (その月のファイル / 前月のファイルの翌月分) は持たない: 月の取り込みの状況 (E12) から、
+// 読むときに分かる (R3-7)。変更前の教室・講師の名前と日時は、システムで変更したときだけ入る
+// (R3-11。変更した人は残さない)。取り込み (R3-12) で入れ替えると消える。
+model Lesson {
+  id                   String       @id @default(uuid()) @db.Uuid
+  classId              String       @db.Uuid
+  date                 DateTime     @db.Date
+  startMinutes         Int
+  endMinutes           Int
+  subjectId            String?      @db.Uuid
+  subjectName          String       @db.VarChar(30)
+  roomId               String?      @db.Uuid
+  roomName             String?      @db.VarChar(20)
+  kind                 LessonKind
+  origin               LessonOrigin @default(IMPORT)
+  cancelled            Boolean      @default(false)
+  previousRoomName     String?      @db.VarChar(20)
+  previousTeacherNames String?      @db.VarChar(400)
+  changedAt            DateTime?
+  createdAt            DateTime     @default(now())
+
+  // クラスを消すと過去の授業も消える。教科・教室を消すと、IDだけが空になる (R5-7)。
+  class    SchoolClass     @relation(fields: [classId], references: [id], onDelete: Cascade)
+  subject  Subject?        @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  room     Room?           @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  teachers LessonTeacher[]
+
+  @@unique([classId, date, startMinutes])
+  @@index([date])
+  @@map("lessons")
+}
+
+// E11 授業の講師。行がなければ「各担当」。講師を消すと、IDだけが空になり、名前は残る。
+model LessonTeacher {
+  lessonId    String  @db.Uuid
+  teacherName String  @db.VarChar(20)
+  teacherId   String? @db.Uuid
+
+  lesson  Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  teacher Teacher? @relation(fields: [teacherId], references: [id], onDelete: SetNull)
+
+  @@id([lessonId, teacherName])
+  @@index([teacherId])
+  @@map("lesson_teachers")
+}
+
+// E12 取り込みの状況。クラス×対象月。取り込んだ日時だけ持つ (取り込んだ人は残さない)。
+// importedAt が空の行は、まだ取り込んでいないが、例外解除 (R3-5) だけしてある。
+// 「入力済み」「未定」「仮の時間割だけ」は保存せず、読むときに計算する (R3-7)。
+model MonthStatus {
+  classId           String    @db.Uuid
+  month             String    @db.VarChar(6) // YYYYMM
+  lastInputDate     DateTime? @db.Date
+  nextLastInputDate DateTime? @db.Date
+  importedAt        DateTime?
+  exceptionUnlocked Boolean   @default(false) // 1回取り込むと、自動で戻る
+
+  class SchoolClass @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  @@id([classId, month])
+  @@map("month_status")
 }
