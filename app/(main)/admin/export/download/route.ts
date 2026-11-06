@@ -23,18 +23,27 @@ function text(status: number, body: string): Response {
   });
 }
 
+/**
+ * Is the request from a page of this site? The browser sets Sec-Fetch-Site and a page
+ * cannot change it. Origin is not enough: with Referrer-Policy no-referrer (set for the
+ * whole site) a form on this site sends "Origin: null". Origin is the fallback for a
+ * browser that sends no Sec-Fetch-Site.
+ */
+function fromThisSite(request: NextRequest): boolean {
+  const site = request.headers.get("sec-fetch-site");
+  if (site !== null) return site === "same-origin";
+  const origin = request.headers.get("origin");
+  if (origin === null) return false;
+  try {
+    return new URL(origin).host === request.headers.get("host");
+  } catch {
+    return false;
+  }
+}
+
 export async function POST(request: NextRequest): Promise<Response> {
   // Another site must not be able to start this: the form comes from this site only.
-  const origin = request.headers.get("origin");
-  let originHost: string | null = null;
-  try {
-    originHost = origin === null ? null : new URL(origin).host;
-  } catch {
-    originHost = null;
-  }
-  if (originHost === null || originHost !== request.headers.get("host")) {
-    return text(403, MESSAGES.ME004);
-  }
+  if (!fromThisSite(request)) return text(403, MESSAGES.ME004);
 
   const user = await getCurrentUser();
   if (user === null) return text(401, MESSAGES.ME004);

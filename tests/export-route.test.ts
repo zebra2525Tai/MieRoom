@@ -87,22 +87,39 @@ describe("POST /admin/export/download", () => {
     expect(mocks.loadExportSource).not.toHaveBeenCalled();
   });
 
-  it("別のサイトから(Origin が違う)、または Origin がなければ 403。ログインの確認より先", async () => {
+  it("同じサイトのフォームは Origin が null でも通る(Referrer-Policy: no-referrer のため)", async () => {
     as("admin");
-    for (const headers of [
-      { origin: "https://evil.example" },
-      { origin: "null" },
-      { origin: `http://${HOST}.evil.example` },
+    const response = await POST(
+      request({ origin: "null", "sec-fetch-site": "same-origin" }),
+    );
+    expect(response.status).toBe(200);
+  });
+
+  it("別のサイトから(Sec-Fetch-Site が same-origin 以外)は 403。ログインの確認より先", async () => {
+    as("admin");
+    for (const site of ["cross-site", "same-site", "none"]) {
+      const response = await POST(request({ "sec-fetch-site": site }));
+      expect(response.status, site).toBe(403);
+    }
+    expect(mocks.getCurrentUser).not.toHaveBeenCalled();
+    expect(mocks.loadExportSource).not.toHaveBeenCalled();
+  });
+
+  it("Sec-Fetch-Site がない古いブラウザは、Origin が同じサイトのときだけ通す", async () => {
+    as("admin");
+    expect((await POST(request())).status).toBe(200);
+    for (const origin of [
+      "https://evil.example",
+      "null",
+      `http://${HOST}.evil.example`,
     ]) {
-      expect((await POST(request(headers))).status, headers.origin).toBe(403);
+      expect((await POST(request({ origin }))).status, origin).toBe(403);
     }
     const noOrigin = new NextRequest(`https://${HOST}/admin/export/download`, {
       method: "POST",
       headers: { host: HOST },
     });
     expect((await POST(noOrigin)).status).toBe(403);
-    expect(mocks.getCurrentUser).not.toHaveBeenCalled();
-    expect(mocks.loadExportSource).not.toHaveBeenCalled();
   });
 
   it("DB で失敗しても、内部の情報は出さず ME903 だけ返す", async () => {
