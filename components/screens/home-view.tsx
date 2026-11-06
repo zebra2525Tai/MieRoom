@@ -5,7 +5,7 @@ import {
 } from "@/components/shell/my-class-select";
 import { LinkButton } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
-import { Badge, Callout, Card, PageHeading } from "@/components/ui/parts";
+import { Badge, Callout, Card } from "@/components/ui/parts";
 import { formatDate } from "@/lib/domain/school-date";
 import { MESSAGES } from "@/lib/messages";
 import { withQuery } from "@/lib/url";
@@ -109,24 +109,19 @@ export function HomeView({
   const current = lessons.kind === "ready" ? lessons.current : null;
   return (
     <>
-      <PageHeading
-        title="次の教室を、すぐに。"
-        description="自分のクラスの授業と、今日の予定を確認できます。"
-        actions={
-          <>
-            <MyClassSelect
-              classes={classes}
-              selectedId={selectedClassId}
-              todayFiscalYear={todayFiscalYear}
-              emptyLabel="選んでください"
-            />
-            <LinkButton variant="primary" href="/reservations/new">
-              <Icon name="plus" size={16} />
-              予約する
-            </LinkButton>
-          </>
-        }
-      />
+      <h1 className="sr-only">ホーム</h1>
+      <div className="mb-6 flex flex-wrap items-center justify-end gap-2">
+        <MyClassSelect
+          classes={classes}
+          selectedId={selectedClassId}
+          todayFiscalYear={todayFiscalYear}
+          emptyLabel="選んでください"
+        />
+        <LinkButton variant="primary" href="/reservations/new">
+          <Icon name="plus" size={16} />
+          予約する
+        </LinkButton>
+      </div>
       {yearChanged ? (
         <Callout kind="warning">{MESSAGES.MI002}</Callout>
       ) : (
