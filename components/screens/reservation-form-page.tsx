@@ -1,8 +1,14 @@
 import "server-only";
 import { parsePeriodNo } from "@/lib/domain/periods";
 import { checkApplicationDate } from "@/lib/domain/reservation-rules";
-import { addDays, isSchoolDate, schoolToday } from "@/lib/domain/school-date";
-import { listSchoolClosures, loadRoomList } from "@/lib/server/queries/common";
+import {
+  addDays,
+  fiscalYearOfDate,
+  isSchoolDate,
+  schoolToday,
+} from "@/lib/domain/school-date";
+import { listSchoolClosures } from "@/lib/server/queries/common";
+import { loadRoomRows } from "@/lib/server/queries/lessons";
 import { one } from "@/lib/url";
 import { ReservationFormView } from "./reservation-form-view";
 
@@ -21,8 +27,9 @@ export async function ReservationFormPage({
   const today = schoolToday(now);
   const requestedDate = one(params.date);
   const date = isSchoolDate(requestedDate) ? requestedDate : addDays(today, 1);
-  const [rooms, closures] = await Promise.all([
-    loadRoomList(),
+  // The rooms with the state of every slot of the day: 授業, 使用止め, 予約 (R4-1).
+  const [{ rooms }, closures] = await Promise.all([
+    loadRoomRows(date, fiscalYearOfDate(date), now),
     listSchoolClosures(addDays(date, -60), date),
   ]);
   const requestedRoom = one(params.room);

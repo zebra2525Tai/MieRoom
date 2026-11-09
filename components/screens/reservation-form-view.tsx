@@ -1,19 +1,13 @@
 import Form from "next/form";
 import { AutoSubmitInput, AutoSubmitSelect } from "@/components/ui/auto-submit";
-import { Button } from "@/components/ui/button";
-import { Field, fieldClass, textareaClass } from "@/components/ui/form";
-import {
-  Callout,
-  Card,
-  NotReadyNotice,
-  PageHeading,
-} from "@/components/ui/parts";
-import { SLOTS, type PeriodNo } from "@/lib/domain/periods";
+import { Field, fieldClass } from "@/components/ui/form";
+import { Card, NotReadyNotice, PageHeading } from "@/components/ui/parts";
+import type { PeriodNo } from "@/lib/domain/periods";
 import type { ApplicationCheck } from "@/lib/domain/reservation-rules";
-import type { RoomRow, SlotStatus } from "@/lib/domain/room-status";
+import type { RoomRow } from "@/lib/domain/room-status";
 import { addDays, formatDate } from "@/lib/domain/school-date";
 import { MESSAGES } from "@/lib/messages";
-import { SlotBadge } from "./rooms-view";
+import { ReservationForm } from "./reservation-form";
 
 function checkMessage(
   check: ApplicationCheck,
@@ -32,10 +26,6 @@ function checkMessage(
     case "ME103":
       return MESSAGES.ME103;
   }
-}
-
-function selectable(status: SlotStatus): boolean {
-  return status.kind !== "lesson" && status.kind !== "blocked";
 }
 
 // S06 予約の申請 / S12 代理入力 (同じ項目・同じ規則。R4-9)
@@ -70,9 +60,11 @@ export function ReservationFormView({
             : "先生が予約を入れます。保存すると、その場で承認済みになります。"
         }
       />
-      <NotReadyNotice>
-        画面の形を確かめる段階です。予約の表ができてから、申請できるようになります。
-      </NotReadyNotice>
+      {mode === "proxy" && (
+        <NotReadyNotice>
+          代理入力は、次の段階で動くようにします。いまは保存できません。
+        </NotReadyNotice>
+      )}
 
       <Card className="mb-4 p-5 sm:p-6">
         <Form action={basePath} className="grid gap-4 sm:grid-cols-2">
@@ -115,84 +107,26 @@ export function ReservationFormView({
         </Form>
       </Card>
 
-      <Card className="p-5 sm:p-6">
-        <form className="flex flex-col gap-5">
-          <fieldset>
-            <legend className="mb-2 text-xs font-semibold">
-              枠<span className="ml-1.5 text-[11px] text-[#a3101f]">必須</span>
-              <span className="ml-2 font-normal text-muted">
-                続けて選んでください
-              </span>
-            </legend>
-            {room ? (
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
-                {SLOTS.map((slot) => {
-                  const status = room.slots[slot.no];
-                  const enabled = selectable(status);
-                  return (
-                    <label
-                      key={slot.no}
-                      className={`flex items-center gap-2.5 rounded-lg border border-line p-3 text-xs ${
-                        enabled ? "cursor-pointer" : "bg-[#f6f8fc] opacity-70"
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        name="slots"
-                        value={slot.no}
-                        disabled={!enabled}
-                        defaultChecked={enabled && slot.periodNo === periodNo}
-                      />
-                      <span className="min-w-0">
-                        <span className="block font-semibold">
-                          {slot.label}
-                        </span>
-                        <span className="block text-[11px] text-muted">
-                          {slot.start}-{slot.end}
-                        </span>
-                      </span>
-                      <span className="ml-auto">
-                        <SlotBadge status={status} />
-                      </span>
-                    </label>
-                  );
-                })}
-              </div>
-            ) : (
-              <Callout kind="neutral" className="">
-                先に教室を選ぶと、枠の状態が出ます。
-              </Callout>
-            )}
-          </fieldset>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="用途" required>
-              <select name="purpose" defaultValue="" className={fieldClass}>
-                <option value="" disabled>
-                  選んでください
-                </option>
-                <option>自習</option>
-                <option>就活</option>
-                <option>その他</option>
-              </select>
-            </Field>
-            <Field label="申請者">
-              <input
-                readOnly
-                value={mode === "apply" ? "ログイン中の人" : "ログイン中の先生"}
-                className={`${fieldClass} bg-[#edf0f5] text-[#586579]`}
-              />
-            </Field>
-            <Field label="備考" full help="100文字まで">
-              <textarea name="note" maxLength={100} className={textareaClass} />
-            </Field>
-          </div>
-          <div className="flex justify-end">
-            <Button type="submit" variant="primary" disabled>
-              {mode === "apply" ? "申請する" : "保存する"}
-            </Button>
-          </div>
-        </form>
-      </Card>
+      <ReservationForm
+        key={`${roomId}-${date}`}
+        endpoint={
+          mode === "apply"
+            ? "/reservations/apply"
+            : "/teacher/reservations/proxy"
+        }
+        successPath={
+          mode === "apply" ? "/reservations" : "/teacher/reservations"
+        }
+        roomId={room?.id ?? null}
+        date={date}
+        periodNo={periodNo}
+        statuses={room?.slots ?? null}
+        submitLabel={mode === "apply" ? "申請する" : "保存する"}
+        applicantLabel={
+          mode === "apply" ? "ログイン中の人" : "ログイン中の先生"
+        }
+        disabled={mode === "proxy"}
+      />
     </>
   );
 }

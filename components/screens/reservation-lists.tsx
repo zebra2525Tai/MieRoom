@@ -3,6 +3,8 @@ import type { ReactNode } from "react";
 import { AutoSubmitInput, AutoSubmitSelect } from "@/components/ui/auto-submit";
 import { Button, LinkButton } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
+import { Pager } from "@/components/ui/pager";
+import { WithdrawButton } from "./withdraw-button";
 import {
   Badge,
   Callout,
@@ -109,15 +111,6 @@ function PurposeCell({ row }: { row: ReservationRow }) {
   );
 }
 
-/** Only while 承認待ち. */
-function WithdrawAction() {
-  return (
-    <Button size="sm" variant="danger">
-      取り下げ
-    </Button>
-  );
-}
-
 function ReviewActions({ row }: { row: ReservationRow }) {
   if (row.status === "pending") {
     return (
@@ -218,7 +211,18 @@ function ReservationCard({
 }
 
 // S07 自分の予約
-export function MyReservationsView({ rows }: { rows: ReservationRow[] }) {
+export function MyReservationsView({
+  rows,
+  notice,
+  page,
+  hasNext,
+}: {
+  rows: ReservationRow[];
+  /** MI101 / MI102: what was just done */
+  notice?: string | null;
+  page: number;
+  hasNext: boolean;
+}) {
   return (
     <>
       <PageHeading
@@ -231,13 +235,16 @@ export function MyReservationsView({ rows }: { rows: ReservationRow[] }) {
           </LinkButton>
         }
       />
+      {notice && (
+        <Callout icon="check" className="mb-5" key={notice}>
+          {notice}
+        </Callout>
+      )}
       {rows.length === 0 ? (
         <EmptyState
           title="まだ予約はありません"
           action={<LinkButton href="/rooms">空き教室を見る</LinkButton>}
-        >
-          {NOT_READY}
-        </EmptyState>
+        />
       ) : (
         <>
           <div className={LAYOUT.xl.table}>
@@ -270,7 +277,7 @@ export function MyReservationsView({ rows }: { rows: ReservationRow[] }) {
                     <Td>{row.createdText}</Td>
                     <Td>
                       {row.status === "pending" ? (
-                        <WithdrawAction />
+                        <WithdrawButton id={row.id} />
                       ) : (
                         <span className="text-muted">—</span>
                       )}
@@ -299,10 +306,15 @@ export function MyReservationsView({ rows }: { rows: ReservationRow[] }) {
                     )}
                   </>
                 }
-                actions={row.status === "pending" ? <WithdrawAction /> : null}
+                actions={
+                  row.status === "pending" ? (
+                    <WithdrawButton id={row.id} />
+                  ) : null
+                }
               />
             ))}
           </ul>
+          <Pager basePath="/reservations" page={page} hasNext={hasNext} />
         </>
       )}
     </>

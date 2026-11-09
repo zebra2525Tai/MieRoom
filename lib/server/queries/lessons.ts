@@ -6,6 +6,7 @@ import type {
 import type { HomeLessons } from "@/components/screens/home-view";
 import { closureNamesOn } from "@/lib/domain/closures";
 import { PERIODS, toMinutes, type PeriodNo } from "@/lib/domain/periods";
+import { slotStatuses } from "@/lib/domain/reservation-core";
 import { ALL_FREE, type RoomRow } from "@/lib/domain/room-status";
 import {
   addDays,
@@ -23,6 +24,7 @@ import {
 } from "@/lib/domain/timetable-read";
 import { getDb } from "../db";
 import { inYear, listClosuresForClass } from "./common";
+import { loadDayOverlays } from "./reservations";
 
 // What S02, S03 and S04 read out of the imported timetable (E10, E11, E12).
 // Callers have checked that somebody is signed in. Only what a screen shows is selected.
@@ -198,16 +200,17 @@ export async function loadTimetableDays(
 }
 
 /**
- * The rooms of S04 on a date. The slots taken by a lesson (R4-1). Reservations and
- * 使用止め are not here yet. `undecidedClasses` are the classes whose timetable of that
- * date is 未定 (MW001).
+ * The rooms of S04 (and S06) on a date, with the state of every slot (R4-1): 使用止め, 授業,
+ * 予約済み, 仮予約あり. `undecidedClasses` are the classes whose timetable of that date is
+ * 未定 (MW001). `now` decides which waiting requests have expired.
  */
 export async function loadRoomRows(
   date: string,
   year: number,
+  now: Date = new Date(),
 ): Promise<{ rooms: RoomRow[]; undecidedClasses: string[] }> {
   const db = getDb();
-  const [rooms, lessons, classes] = await Promise.all([
+  const [rooms, lessons, classes, overlays] = await Promise.all([
     db.room.findMany({
       where: { active: true },
       select: { id: true, name: true, building: true, kind: true, note: true },
@@ -228,6 +231,7 @@ export async function loadRoomRows(
       select: { id: true, name: true },
       orderBy: { name: "asc" },
     }),
+    loadDayOverlays(date),
   ]);
   const states = await loadMonthStates(
     classes.map((c) => c.id),
@@ -242,7 +246,12 @@ export async function loadRoomRows(
   return {
     rooms: rooms.map((room) => ({
       ...room,
-      slots: byRoom.get(room.id) ?? ALL_FREE,
+      slots: slotStatuses({
+        lessonSlots: byRoom.get(room.id) ?? ALL_FREE,
+        blockedPeriods: overlays.blockedPeriods.get(room.id),
+        reservations: overlays.reservations.get(room.id),
+        now,
+      }),
     })),
     undecidedClasses: classes
       .filter((item) => !isEntered(date, states.get(item.id) ?? NO_STATES))

@@ -558,7 +558,13 @@ export function sampleFor(
     case "s07":
       return {
         menuId: "s07",
-        element: <MyReservationsView rows={reservationRows(today)} />,
+        element: (
+          <MyReservationsView
+            rows={reservationRows(today)}
+            page={1}
+            hasNext={false}
+          />
+        ),
       };
     case "s10":
       return {

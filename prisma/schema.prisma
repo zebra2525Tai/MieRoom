@@ -16,15 +16,18 @@ datasource db {
 // ---- Better Auth ------------------------------------------------------
 
 model User {
-  id            String    @id
+  id            String        @id
   name          String
-  email         String    @unique
-  emailVerified Boolean   @default(false)
+  email         String        @unique
+  emailVerified Boolean       @default(false)
   image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @default(now()) @updatedAt
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @default(now()) @updatedAt
   sessions      Session[]
   accounts      Account[]
+  reservations  Reservation[] @relation("Applicant")
+  handled       Reservation[] @relation("Handler")
+  roomBlocks    RoomBlock[]
 
   @@map("users")
 }
@@ -190,6 +193,8 @@ model Room {
   subjectRooms SubjectRoom[]
   lessons      Lesson[]
   locations    Location[]
+  reservations Reservation[]
+  blocks       RoomBlock[]
 
   @@map("rooms")
 }
@@ -378,4 +383,78 @@ model Location {
   room    Room?   @relation(fields: [roomId], references: [id], onDelete: SetNull)
 
   @@map("locations")
+}
+
+// ---- 予約と使用止め (外部設計書 11章 E14〜E16, R4) ---------------------------------------------
+// 期限切れは保存しない: 承認待ちのまま最初の枠が始まったものを、読むときに期限切れとする (R4-6)。
+// 予約は、枠の日付から30日たったら消す (R4-11。定期実行は別の段階)。
+
+enum ReservationStatus {
+  PENDING // 承認待ち
+  APPROVED // 承認済み (代理入力もここ)
+  REJECTED // 却下
+  CANCELLED // 取消 (承認済みを先生が取り消した)
+  WITHDRAWN // 取り下げ (承認前に申請者が)
+
+  @@map("reservation_status")
+}
+
+// E14 予約。申請者・対応した先生の氏名は、そのときの名前をコピーして持つ (14-11)。
+// 利用者の表を整理(DELETE FROM users)しても、「だれが対応したか」は予約と一緒に残る。
+// 申請者の利用者を消すと、その人の予約も消える。対応した先生の利用者を消すと、IDだけが空になる。
+// 教室を消すと、予約も一緒に消える (R5-7。使われている教室は消せない)。
+model Reservation {
+  id            String            @id @default(uuid()) @db.Uuid
+  roomId        String            @db.Uuid
+  date          DateTime          @db.Date
+  purpose       String            @db.VarChar(20)
+  note          String            @default("") @db.VarChar(100)
+  status        ReservationStatus @default(PENDING)
+  proxy         Boolean           @default(false) // 代理入力 (R4-9)
+  applicantId   String
+  applicantName String            @db.VarChar(100)
+  handledById   String?
+  handledByName String?           @db.VarChar(100)
+  handledAt     DateTime?
+  createdAt     DateTime          @default(now())
+
+  room      Room              @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  applicant User              @relation("Applicant", fields: [applicantId], references: [id], onDelete: Cascade)
+  handledBy User?             @relation("Handler", fields: [handledById], references: [id], onDelete: SetNull)
+  slots     ReservationSlot[]
+
+  @@index([roomId, date])
+  @@index([status, date])
+  @@index([applicantId, date])
+  @@map("reservations")
+}
+
+// E15 予約の枠 (1〜8: 1限前半〜4限後半。R3-1)。
+model ReservationSlot {
+  reservationId String @db.Uuid
+  slot          Int    @db.SmallInt
+
+  reservation Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+
+  @@id([reservationId, slot])
+  @@map("reservation_slots")
+}
+
+// E16 使用止め。日付と時限の範囲 (前半・後半の両方を止める)。設定した先生の氏名はコピーして持つ。
+model RoomBlock {
+  id          String   @id @default(uuid()) @db.Uuid
+  roomId      String   @db.Uuid
+  startDate   DateTime @db.Date
+  startPeriod Int      @db.SmallInt
+  endDate     DateTime @db.Date
+  endPeriod   Int      @db.SmallInt
+  setById     String?
+  setByName   String   @db.VarChar(100)
+  createdAt   DateTime @default(now())
+
+  room  Room  @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  setBy User? @relation(fields: [setById], references: [id], onDelete: SetNull)
+
+  @@index([roomId, endDate])
+  @@map("room_blocks")
 }
