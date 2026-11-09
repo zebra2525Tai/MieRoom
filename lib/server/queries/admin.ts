@@ -36,15 +36,18 @@ export async function loadMaster(
           startYear: true,
           endYear: true,
           active: true,
+          updatedAt: true,
+          homeRoomId: true,
           homeRoom: { select: { name: true } },
         },
         orderBy: { name: "asc" },
       });
       return {
         tab,
-        rows: rows.map(({ homeRoom, ...row }) => ({
+        rows: rows.map(({ homeRoom, updatedAt, ...row }) => ({
           ...row,
           homeRoom: homeRoom.name,
+          version: updatedAt.toISOString(),
         })),
       };
     }
@@ -57,24 +60,32 @@ export async function loadMaster(
           email: true,
           tagId: true,
           active: true,
+          updatedAt: true,
         },
         orderBy: { displayName: "asc" },
       });
       return {
         tab,
-        rows: rows.map(({ displayName, ...row }) => ({
+        rows: rows.map(({ displayName, updatedAt, ...row }) => ({
           ...row,
           name: displayName,
+          version: updatedAt.toISOString(),
         })),
       };
     }
     case "subjects": {
       const rows = await db.subject.findMany({
         where: active,
-        select: { id: true, name: true, active: true },
+        select: { id: true, name: true, active: true, updatedAt: true },
         orderBy: { name: "asc" },
       });
-      return { tab, rows };
+      return {
+        tab,
+        rows: rows.map(({ updatedAt, ...row }) => ({
+          ...row,
+          version: updatedAt.toISOString(),
+        })),
+      };
     }
     case "rooms": {
       const rows = await db.room.findMany({
@@ -86,15 +97,17 @@ export async function loadMaster(
           kind: true,
           note: true,
           active: true,
+          updatedAt: true,
           receivers: { select: { receiverId: true } },
         },
         orderBy: { name: "asc" },
       });
       return {
         tab,
-        rows: rows.map(({ receivers, ...row }) => ({
+        rows: rows.map(({ receivers, updatedAt, ...row }) => ({
           ...row,
           receivers: receivers.map((item) => item.receiverId),
+          version: updatedAt.toISOString(),
         })),
       };
     }

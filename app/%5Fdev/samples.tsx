@@ -271,9 +271,11 @@ const MASTER_DATA: Record<MasterTab, MasterData> = {
       id: item.id,
       name: item.name,
       homeRoom: ["201", "202", "203", "305"][index],
+      homeRoomId: ["201", "202", "203", "305"][index],
       startYear: 2026,
       endYear: null,
       active: true,
+      version: "2026-11-01T00:00:00.000Z",
     })),
   },
   teachers: {
@@ -282,16 +284,32 @@ const MASTER_DATA: Record<MasterTab, MasterData> = {
       id: item.id,
       name: item.name,
       email: null,
-      tagId: index === 5 ? "7777772E-…-636F6D000001:1:12" : null,
+      tagId: index === 5 ? "12" : null,
       active: index !== 3,
+      version: "2026-11-01T00:00:00.000Z",
     })),
   },
   subjects: {
     tab: "subjects",
     rows: [
-      { id: "s1", name: "英語A", active: true },
-      { id: "s2", name: "情報リテラシー", active: true },
-      { id: "s3", name: "プログラミング基礎", active: true },
+      {
+        id: "s1",
+        name: "英語A",
+        active: true,
+        version: "2026-11-01T00:00:00.000Z",
+      },
+      {
+        id: "s2",
+        name: "情報リテラシー",
+        active: true,
+        version: "2026-11-01T00:00:00.000Z",
+      },
+      {
+        id: "s3",
+        name: "プログラミング基礎",
+        active: true,
+        version: "2026-11-01T00:00:00.000Z",
+      },
     ],
   },
   rooms: {
@@ -304,6 +322,7 @@ const MASTER_DATA: Record<MasterTab, MasterData> = {
       note: item.note,
       receivers: item.id === "304" ? ["304"] : [],
       active: true,
+      version: "2026-11-01T00:00:00.000Z",
     })),
   },
 };
@@ -716,6 +735,7 @@ export function sampleFor(
         menuId: "s21",
         element: (
           <MastersView
+            defaultYear={2026}
             data={data}
             showInactive={one(params.inactive) === "1"}
             basePath={base}

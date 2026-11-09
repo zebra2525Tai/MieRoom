@@ -10,7 +10,7 @@ import type { AccessResult } from "./access";
 export async function adminPost(
   request: NextRequest,
   label: string,
-  work: (body: Record<string, unknown>) => Promise<AccessResult>,
+  work: (body: Record<string, unknown>) => Promise<AccessResult | Response>,
 ): Promise<Response> {
   const allowed = await authorize(request, "admin");
   if ("refusal" in allowed) return allowed.refusal;
@@ -22,6 +22,7 @@ export async function adminPost(
       : {};
   try {
     const result = await work(record);
+    if (result instanceof Response) return result;
     switch (result.kind) {
       case "done":
         return json(200, { notice: result.notice });

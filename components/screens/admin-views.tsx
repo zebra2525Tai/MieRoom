@@ -19,6 +19,7 @@ import {
   Th,
 } from "@/components/ui/parts";
 import type { ExportIssue } from "@/lib/domain/master-export";
+import { MasterActiveButton, MasterEditButton } from "./master-editor";
 import {
   ReceiverAddForm,
   ReceiverRemoveButton,
@@ -58,9 +59,11 @@ export type MasterData =
         id: string;
         name: string;
         homeRoom: string;
+        homeRoomId: string;
         startYear: number;
         endYear: number | null;
         active: boolean;
+        version: string;
       }[];
     }
   | {
@@ -71,9 +74,13 @@ export type MasterData =
         email: string | null;
         tagId: string | null;
         active: boolean;
+        version: string;
       }[];
     }
-  | { tab: "subjects"; rows: { id: string; name: string; active: boolean }[] }
+  | {
+      tab: "subjects";
+      rows: { id: string; name: string; active: boolean; version: string }[];
+    }
   | {
       tab: "rooms";
       rows: {
@@ -84,6 +91,7 @@ export type MasterData =
         note: string | null;
         receivers: string[];
         active: boolean;
+        version: string;
       }[];
     };
 
@@ -92,25 +100,61 @@ export function MastersView({
   data,
   showInactive,
   basePath = "/admin/masters",
+  rooms = [],
+  defaultYear,
+  notice,
+  renamed = false,
+  fixCount = 0,
 }: {
   data: MasterData;
   showInactive: boolean;
   /** Where the tabs live: `${basePath}/${tab}`. */
   basePath?: string;
+  /** Active rooms, for the 教室 box of a class */
+  rooms?: { id: string; name: string }[];
+  /** 開始年度の初期値: this school year */
+  defaultYear: number;
+  /** MI501 / MI502: what was just done */
+  notice?: string | null;
+  /** MW501: a name was changed */
+  renamed?: boolean;
+  /** MW502: how many things the CSV export check wants fixed */
+  fixCount?: number;
 }) {
   const path = `${basePath}/${data.tab}`;
   return (
     <>
       <PageHeading
         title="マスタ"
-        description="クラス・講師・教科・教室を管理します。名前は、無効なものも含めて重複できません。"
+        description="クラス・講師・教科・教室を管理します。名前は、無効なものも含めて重複できません。削除は「削除管理」で行います。"
         actions={
-          <Button variant="primary" disabled>
+          <MasterEditButton
+            tab={data.tab}
+            row={null}
+            rooms={rooms}
+            defaultYear={defaultYear}
+            variant="primary"
+          >
             <Icon name="plus" size={16} />
             追加
-          </Button>
+          </MasterEditButton>
         }
       />
+      {notice && (
+        <Callout icon="check" className="mb-3" key={notice}>
+          {notice}
+        </Callout>
+      )}
+      {renamed && (
+        <Callout kind="warning" icon="info" className="mb-3">
+          {MESSAGES.MW501}
+        </Callout>
+      )}
+      {fixCount > 0 && (
+        <Callout kind="warning" icon="info" className="mb-3">
+          {MESSAGES.MW502(fixCount)}
+        </Callout>
+      )}
       <Tabs
         label="マスタの種類"
         items={MASTER_TABS.map((item) => ({
@@ -132,7 +176,7 @@ export function MastersView({
           ]}
         />
         <span className="text-[11px] text-muted sm:ml-auto">
-          {data.rows.length}件 / {READ_ONLY_NOTE}
+          {data.rows.length}件
         </span>
       </FilterBar>
       {data.rows.length === 0 ? (
@@ -148,6 +192,7 @@ export function MastersView({
                   <Th>開始年度</Th>
                   <Th>終了年度</Th>
                   <Th>状態</Th>
+                  <Th>操作</Th>
                 </tr>
               </thead>
               <tbody>
@@ -162,6 +207,31 @@ export function MastersView({
                     <Td>
                       <ActiveBadge active={row.active} />
                     </Td>
+                    <Td>
+                      <div className="flex flex-wrap gap-2">
+                        <MasterEditButton
+                          tab={data.tab}
+                          row={{
+                            id: row.id,
+                            version: row.version,
+                            name: row.name,
+                            homeRoomId: row.homeRoomId,
+                            startYear: row.startYear,
+                            endYear: row.endYear,
+                          }}
+                          rooms={rooms}
+                          defaultYear={defaultYear}
+                        >
+                          編集
+                        </MasterEditButton>
+                        <MasterActiveButton
+                          tab={data.tab}
+                          id={row.id}
+                          name={row.name}
+                          active={row.active}
+                        />
+                      </div>
+                    </Td>
                   </tr>
                 ))}
               </tbody>
@@ -175,6 +245,7 @@ export function MastersView({
                   <Th>メール</Th>
                   <Th>タグID</Th>
                   <Th>状態</Th>
+                  <Th>操作</Th>
                 </tr>
               </thead>
               <tbody>
@@ -188,6 +259,29 @@ export function MastersView({
                     <Td>
                       <ActiveBadge active={row.active} />
                     </Td>
+                    <Td>
+                      <div className="flex flex-wrap gap-2">
+                        <MasterEditButton
+                          tab={data.tab}
+                          row={{
+                            id: row.id,
+                            version: row.version,
+                            name: row.name,
+                            email: row.email,
+                          }}
+                          rooms={rooms}
+                          defaultYear={defaultYear}
+                        >
+                          編集
+                        </MasterEditButton>
+                        <MasterActiveButton
+                          tab={data.tab}
+                          id={row.id}
+                          name={row.name}
+                          active={row.active}
+                        />
+                      </div>
+                    </Td>
                   </tr>
                 ))}
               </tbody>
@@ -199,6 +293,7 @@ export function MastersView({
                 <tr>
                   <Th>教科名</Th>
                   <Th>状態</Th>
+                  <Th>操作</Th>
                 </tr>
               </thead>
               <tbody>
@@ -209,6 +304,28 @@ export function MastersView({
                     </Td>
                     <Td>
                       <ActiveBadge active={row.active} />
+                    </Td>
+                    <Td>
+                      <div className="flex flex-wrap gap-2">
+                        <MasterEditButton
+                          tab={data.tab}
+                          row={{
+                            id: row.id,
+                            version: row.version,
+                            name: row.name,
+                          }}
+                          rooms={rooms}
+                          defaultYear={defaultYear}
+                        >
+                          編集
+                        </MasterEditButton>
+                        <MasterActiveButton
+                          tab={data.tab}
+                          id={row.id}
+                          name={row.name}
+                          active={row.active}
+                        />
+                      </div>
                     </Td>
                   </tr>
                 ))}
@@ -225,6 +342,7 @@ export function MastersView({
                   <Th>備考</Th>
                   <Th>受信機ID</Th>
                   <Th>状態</Th>
+                  <Th>操作</Th>
                 </tr>
               </thead>
               <tbody>
@@ -239,6 +357,31 @@ export function MastersView({
                     <Td>{row.receivers.join("、") || "—"}</Td>
                     <Td>
                       <ActiveBadge active={row.active} />
+                    </Td>
+                    <Td>
+                      <div className="flex flex-wrap gap-2">
+                        <MasterEditButton
+                          tab={data.tab}
+                          row={{
+                            id: row.id,
+                            version: row.version,
+                            name: row.name,
+                            building: row.building,
+                            kind: row.kind,
+                            note: row.note,
+                          }}
+                          rooms={rooms}
+                          defaultYear={defaultYear}
+                        >
+                          編集
+                        </MasterEditButton>
+                        <MasterActiveButton
+                          tab={data.tab}
+                          id={row.id}
+                          name={row.name}
+                          active={row.active}
+                        />
+                      </div>
                     </Td>
                   </tr>
                 ))}
