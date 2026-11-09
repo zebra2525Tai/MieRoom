@@ -120,6 +120,7 @@ export async function loadLinks(tab: LinkTab, classId: string) {
     const rows = await db.subjectTeacher.findMany({
       where: { classId },
       select: {
+        subjectId: true,
         teacherKey: true,
         subject: { select: { name: true } },
         teacher: { select: { displayName: true } },
@@ -128,6 +129,8 @@ export async function loadLinks(tab: LinkTab, classId: string) {
     return rows
       .map((row) => ({
         key: `${row.subject.name}/${row.teacherKey}`,
+        subjectId: row.subjectId,
+        targetKey: row.teacherKey,
         subject: row.subject.name,
         value: row.teacher?.displayName ?? "各担当",
       }))
@@ -137,6 +140,7 @@ export async function loadLinks(tab: LinkTab, classId: string) {
     const rows = await db.subjectRoom.findMany({
       where: { classId },
       select: {
+        subjectId: true,
         roomKey: true,
         subject: { select: { name: true } },
         room: { select: { name: true } },
@@ -145,6 +149,8 @@ export async function loadLinks(tab: LinkTab, classId: string) {
     return rows
       .map((row) => ({
         key: `${row.subject.name}/${row.roomKey}`,
+        subjectId: row.subjectId,
+        targetKey: row.roomKey,
         subject: row.subject.name,
         value: row.room?.name ?? "ー(教室未定)",
       }))
@@ -164,6 +170,8 @@ export async function loadLinks(tab: LinkTab, classId: string) {
   return subjects
     .map((row) => ({
       key: row.subjectId,
+      subjectId: row.subjectId,
+      targetKey: "",
       subject: row.subject.name,
       value: "",
       missing: !hasTeacher.has(row.subjectId),
@@ -328,5 +336,40 @@ export async function loadAccess() {
       receiverId: row.receiverId,
       room: row.room.name,
     })),
+  };
+}
+
+/** What the 追加 box of S22 offers: the choices of each list (active ones only). */
+export async function loadLinkChoices(classId: string) {
+  const db = getDb();
+  const [subjects, ofClass, teachers, rooms] = await Promise.all([
+    db.subject.findMany({
+      where: { active: true },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    }),
+    db.classSubject.findMany({
+      where: { classId },
+      select: { subjectId: true },
+    }),
+    db.teacher.findMany({
+      where: { active: true },
+      select: { id: true, displayName: true },
+      orderBy: { displayName: "asc" },
+    }),
+    db.room.findMany({
+      where: { active: true },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    }),
+  ]);
+  const linked = new Set(ofClass.map((row) => row.subjectId));
+  return {
+    // クラスの教科: not yet in the class
+    newSubjects: subjects.filter((item) => !linked.has(item.id)),
+    // 教科の講師・教科の教室: one of the class's subjects
+    classSubjects: subjects.filter((item) => linked.has(item.id)),
+    teachers: teachers.map((item) => ({ id: item.id, name: item.displayName })),
+    rooms,
   };
 }

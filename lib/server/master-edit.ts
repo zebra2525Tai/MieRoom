@@ -40,7 +40,7 @@ const isDuplicate = (error: unknown) =>
   (error as { code: unknown }).code === "P2002";
 
 /** How many errors the export check (R5-6) finds now. Never stops a save. */
-async function countExportIssues(now: Date): Promise<number> {
+export async function countExportIssues(now: Date): Promise<number> {
   try {
     const year = fiscalYearOfDate(schoolToday(now));
     const result = buildExport(await loadExportSource(year));

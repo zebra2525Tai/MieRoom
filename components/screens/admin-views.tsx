@@ -19,6 +19,11 @@ import {
   Th,
 } from "@/components/ui/parts";
 import type { ExportIssue } from "@/lib/domain/master-export";
+import {
+  LinkAddButton,
+  LinkRemoveButton,
+  type LinkChoices,
+} from "./link-editor";
 import { MasterActiveButton, MasterEditButton } from "./master-editor";
 import {
   ReceiverAddForm,
@@ -408,14 +413,30 @@ export function LinksView({
   classes,
   classId,
   rows,
+  choices,
   basePath = "/admin/links",
+  notice,
+  fixCount = 0,
 }: {
   tab: LinkTab;
   classes: { id: string; name: string }[];
   classId: string | null;
   /** subject, and the teacher or room of that row (empty for クラスの教科). */
-  rows: { key: string; subject: string; value: string; missing?: boolean }[];
+  rows: {
+    key: string;
+    subjectId: string;
+    targetKey: string;
+    subject: string;
+    value: string;
+    missing?: boolean;
+  }[];
+  /** The lists of the 追加 box */
+  choices: LinkChoices;
   basePath?: string;
+  /** MI501: what was just done */
+  notice?: string | null;
+  /** MW502: how many things the CSV export check wants fixed */
+  fixCount?: number;
 }) {
   return (
     <>
@@ -423,12 +444,21 @@ export function LinksView({
         title="紐づけ"
         description="クラスの教科と、教科の講師・教室を管理します。ツールのプルダウンの元になります。"
         actions={
-          <Button variant="primary" disabled>
-            <Icon name="plus" size={16} />
-            追加
-          </Button>
+          classId ? (
+            <LinkAddButton tab={tab} classId={classId} choices={choices} />
+          ) : undefined
         }
       />
+      {notice && (
+        <Callout icon="check" className="mb-3" key={notice}>
+          {notice}
+        </Callout>
+      )}
+      {fixCount > 0 && (
+        <Callout kind="warning" icon="info" className="mb-3">
+          {MESSAGES.MW502(fixCount)}
+        </Callout>
+      )}
       <Tabs
         label="紐づけの種類"
         items={LINK_TABS.map((item) => ({
@@ -457,7 +487,7 @@ export function LinksView({
           </noscript>
         </Form>
         <span className="text-[11px] text-muted sm:ml-auto">
-          {rows.length}件 / {READ_ONLY_NOTE}
+          {rows.length}件
         </span>
       </FilterBar>
       {rows.length === 0 ? (
@@ -471,6 +501,7 @@ export function LinksView({
                 <Th>{tab === "teachers" ? "講師" : "教室"}</Th>
               )}
               {tab === "subjects" && <Th>確認</Th>}
+              <Th>操作</Th>
             </tr>
           </thead>
           <tbody>
@@ -489,6 +520,16 @@ export function LinksView({
                     )}
                   </Td>
                 )}
+                <Td>
+                  {classId && (
+                    <LinkRemoveButton
+                      tab={tab}
+                      classId={classId}
+                      subjectId={row.subjectId}
+                      targetKey={row.targetKey}
+                    />
+                  )}
+                </Td>
               </tr>
             ))}
           </tbody>

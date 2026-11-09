@@ -759,16 +759,33 @@ export function sampleFor(
             rows={[
               {
                 key: "a",
+                subjectId: "s1",
+                targetKey: "t1",
                 subject: "英語A",
                 value: tab === "rooms" ? "201" : "石原",
               },
               {
                 key: "b",
+                subjectId: "s2",
+                targetKey: "each",
                 subject: "キャリアデザイン",
                 value: tab === "rooms" ? "ー(教室未定)" : "各担当",
               },
-              { key: "c", subject: "日本語表現", value: "島田", missing: true },
+              {
+                key: "c",
+                subjectId: "s3",
+                targetKey: "t2",
+                subject: "日本語表現",
+                value: "島田",
+                missing: true,
+              },
             ]}
+            choices={{
+              newSubjects: [],
+              classSubjects: [{ id: "s1", name: "英語A" }],
+              teachers: [{ id: "t1", name: "石原" }],
+              rooms: [{ id: "r1", name: "201" }],
+            }}
             basePath={base}
           />
         ),
