@@ -1,7 +1,7 @@
 import { ForbiddenView } from "@/app/forbidden-view";
 import { TeacherReservationsView } from "@/components/screens/reservation-lists";
 import { addDays, isSchoolDate, schoolToday } from "@/lib/domain/school-date";
-import { loadRoomRows } from "@/lib/server/queries/common";
+import { loadRoomList } from "@/lib/server/queries/common";
 import { hasRole, requireUser } from "@/lib/server/session";
 import { one } from "@/lib/url";
 
@@ -15,7 +15,7 @@ export default async function TeacherReservationsPage({
   const today = schoolToday(new Date());
   const start = one(params.start);
   const end = one(params.end);
-  const rooms = await loadRoomRows();
+  const rooms = await loadRoomList();
   return (
     <TeacherReservationsView
       rows={[]}

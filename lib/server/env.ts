@@ -47,6 +47,17 @@ const schema = z.object({
       "needs at least one domain",
     ),
   INITIAL_ADMIN_EMAIL: z.string().optional().default(""),
+  // The gateway (the school PC) that sends location events: its shared key and its id.
+  // Unset on a deployment: the endpoint answers 403 gateway_disabled.
+  GATEWAY_API_KEY: z
+    .string()
+    .optional()
+    .default("")
+    .refine(
+      (value) => value === "" || value.length >= 32,
+      "must be at least 32 characters",
+    ),
+  ALLOWED_GATEWAY_ID: z.string().max(64).optional().default(""),
   // Optional. The shape of a student's e-mail before "@" (e.g. [0-9]{6}).
   // Unset: only the teacher list makes a teacher.
   STUDENT_EMAIL_PATTERN: z

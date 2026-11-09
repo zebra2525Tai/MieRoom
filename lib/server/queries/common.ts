@@ -1,8 +1,8 @@
 import "server-only";
-import { closureNamesOn, type ClosureItem } from "@/lib/domain/closures";
+import type { ClosureItem } from "@/lib/domain/closures";
+import { teacherLocationView } from "@/lib/domain/gateway-event";
 import { ALL_FREE, type RoomRow } from "@/lib/domain/room-status";
 import { dateColumnToText, textToDateColumn } from "@/lib/domain/school-date";
-import type { TimetableDay } from "@/components/screens/lesson-parts";
 import type { TeacherRow } from "@/components/screens/teachers-view";
 import { getDb } from "../db";
 
@@ -10,7 +10,7 @@ import { getDb } from "../db";
 // Only the columns a screen shows are selected. Callers check the role first.
 
 /** 年度 Y に存在していて、有効なクラス (R5-4, R6-3). */
-function inYear(year: number) {
+export function inYear(year: number) {
   return {
     active: true,
     startYear: { lte: year },
@@ -86,31 +86,10 @@ export async function listClosuresForClass(
 }
 
 /**
- * The days of S03. 授業の表(E10)と取り込みの状況(E12)がまだないので、どの日も未定
- * (R3-7)。休み・行事だけが実際のデータ。
+ * The rooms for the lists and forms that do not show the slots of a day (S06, S11, S12,
+ * S13): every slot is free. S04 reads the slots from the timetable (lessons.ts).
  */
-export async function loadTimetableDays(
-  dates: string[],
-  classId: string | null,
-): Promise<TimetableDay[]> {
-  const closures = await listClosuresForClass(
-    dates[0],
-    dates[dates.length - 1],
-    classId,
-  );
-  return dates.map((date) => ({
-    date,
-    entered: false,
-    closures: closureNamesOn(date, closures),
-    lessons: [],
-  }));
-}
-
-/**
- * The rooms of S04. 授業・予約・使用止めの表がまだないので、どの枠も空き。画面には、
- * 全クラスが未入力という警告(MW001)が一緒に出る。
- */
-export async function loadRoomRows(): Promise<RoomRow[]> {
+export async function loadRoomList(): Promise<RoomRow[]> {
   const rows = await getDb().room.findMany({
     where: { active: true },
     select: {
@@ -126,8 +105,7 @@ export async function loadRoomRows(): Promise<RoomRow[]> {
 }
 
 /**
- * S05. 位置の表(E17)がまだないので、タグのある先生は「検知エリア外」(R7-2)。
- * タグIDそのものは画面に渡さない。
+ * S05. 位置は locations (E17) の最新の1件 (R7-2)。タグIDそのものは画面に渡さない。
  */
 export async function loadTeacherDirectory(
   year: number,
@@ -144,6 +122,9 @@ export async function loadTeacherDirectory(
         id: true,
         displayName: true,
         tagId: true,
+        location: {
+          select: { status: true, room: { select: { name: true } } },
+        },
         subjectTeachers: {
           where: { class: inYear(year) },
           select: {
@@ -177,7 +158,15 @@ export async function loadTeacherDirectory(
   return teachers.map((teacher) => ({
     id: teacher.id,
     name: teacher.displayName,
-    location: teacher.tagId ? { kind: "out-of-area" } : { kind: "no-tag" },
+    location: teacherLocationView({
+      tagId: teacher.tagId,
+      location: teacher.location
+        ? {
+            status: teacher.location.status,
+            roomName: teacher.location.room?.name ?? null,
+          }
+        : null,
+    }),
     assignments: teacher.subjectTeachers
       .map((item) => ({
         className: item.class.name,

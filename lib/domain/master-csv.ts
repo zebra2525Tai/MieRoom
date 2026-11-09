@@ -19,7 +19,7 @@ export const MASTER_FILES = {
 export type MasterFileKey = keyof typeof MASTER_FILES;
 export type MasterFileTexts = Record<MasterFileKey, string>;
 
-const HEADERS: Record<MasterFileKey, string[]> = {
+export const MASTER_HEADERS: Record<MasterFileKey, string[]> = {
   classes: ["クラス名", "ホームルーム教室"],
   teachers: ["時間割での表記"],
   subjects: ["教科名"],
@@ -42,8 +42,8 @@ const MAX = {
 } as const;
 
 /** Row limits of the Excel tool's tables (R5-6 の7, R5-6 の6). */
-const MAX_ROWS = { master: 100, link: 1000, closure: 200 } as const;
-const CLOSURE_WARN_ROWS = 180;
+export const MAX_ROWS = { master: 100, link: 1000, closure: 200 } as const;
+export const CLOSURE_WARN_ROWS = 180;
 
 /** 「各担当」 (no fixed teacher) and 「ー」 (room not decided yet) in the link files. */
 export const ANY_TEACHER = "各担当";
@@ -93,7 +93,7 @@ export type MasterIssue = {
 const length = (value: string) => [...value].length;
 
 /** Room names are written with half-width digits (R5-1, the same as the Excel tool). */
-function normalizeRoomName(value: string): string {
+export function normalizeRoomName(value: string): string {
   return value.replace(/[０-９]/g, (c) =>
     String.fromCharCode(c.charCodeAt(0) - 0xfee0),
   );
@@ -119,7 +119,7 @@ export function buildMasterData(files: MasterFileTexts): {
       transform: (v) => v.trim(),
     });
     const fields = parsed.meta.fields ?? [];
-    const missing = HEADERS[key].filter((h) => !fields.includes(h));
+    const missing = MASTER_HEADERS[key].filter((h) => !fields.includes(h));
     if (missing.length > 0) {
       error("ME402", `${name}: 必須の列がありません(${missing.join("、")})`);
       return [];

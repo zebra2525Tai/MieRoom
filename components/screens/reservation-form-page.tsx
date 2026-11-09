@@ -2,7 +2,7 @@ import "server-only";
 import { parsePeriodNo } from "@/lib/domain/periods";
 import { checkApplicationDate } from "@/lib/domain/reservation-rules";
 import { addDays, isSchoolDate, schoolToday } from "@/lib/domain/school-date";
-import { listSchoolClosures, loadRoomRows } from "@/lib/server/queries/common";
+import { listSchoolClosures, loadRoomList } from "@/lib/server/queries/common";
 import { one } from "@/lib/url";
 import { ReservationFormView } from "./reservation-form-view";
 
@@ -22,7 +22,7 @@ export async function ReservationFormPage({
   const requestedDate = one(params.date);
   const date = isSchoolDate(requestedDate) ? requestedDate : addDays(today, 1);
   const [rooms, closures] = await Promise.all([
-    loadRoomRows(),
+    loadRoomList(),
     listSchoolClosures(addDays(date, -60), date),
   ]);
   const requestedRoom = one(params.room);

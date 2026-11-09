@@ -11,21 +11,22 @@ import {
   monthWeeks,
   schoolMinutes,
   schoolToday,
+  weekdayOf,
 } from "@/lib/domain/school-date";
 import {
   listActiveTeachers,
   listClassesForYear,
-  loadTimetableDays,
 } from "@/lib/server/queries/common";
+import { loadTimetableDays } from "@/lib/server/queries/lessons";
 import { hasRole, requireUser } from "@/lib/server/session";
 import { one } from "@/lib/url";
 
 function datesOf(mode: TimetableMode, date: string): string[] {
   if (mode === "day") return [date];
   if (mode === "week") {
-    // 月〜金。土曜は、授業があるときだけ足す(授業の表ができてから)。
+    // 月〜土。土曜は、授業があるときだけ出す(下で、授業のない土曜を外す。14-1 #19)。
     const monday = mondayOf(date);
-    return [0, 1, 2, 3, 4].map((offset) => addDays(monday, offset));
+    return [0, 1, 2, 3, 4, 5].map((offset) => addDays(monday, offset));
   }
   return monthWeeks(monthOf(date)).flat();
 }
@@ -55,10 +56,16 @@ export default async function TimetablePage({
     : (classes.find((item) => item.id === one(params.class)) ??
       classes[0] ??
       null);
-  const days = await loadTimetableDays(
-    datesOf(mode, date),
-    selectedClass?.id ?? null,
-  );
+  const loaded = await loadTimetableDays(datesOf(mode, date), {
+    classId: selectedClass?.id ?? null,
+    teacherId: selectedTeacher?.id ?? null,
+  });
+  const days =
+    mode === "week"
+      ? loaded.filter(
+          (day) => weekdayOf(day.date) !== 6 || day.lessons.length > 0,
+        )
+      : loaded;
 
   return (
     <TimetableView

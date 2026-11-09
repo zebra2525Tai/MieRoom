@@ -1,4 +1,5 @@
 import Form from "next/form";
+import Link from "next/link";
 import { AutoSubmitSelect } from "@/components/ui/auto-submit";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
@@ -16,6 +17,7 @@ import {
   Td,
   Th,
 } from "@/components/ui/parts";
+import type { ExportIssue } from "@/lib/domain/master-export";
 import type { RoomKind } from "@/lib/domain/room-status";
 import { MESSAGES } from "@/lib/messages";
 import { withQuery } from "@/lib/url";
@@ -442,30 +444,112 @@ export function ClosuresView({
   );
 }
 
+export type ExportFileRow = { name: string; rows: number };
+
 // S24 CSV書き出し
-export function ExportView({ yearLabel }: { yearLabel: string }) {
+export function ExportView({
+  yearLabel,
+  files,
+  issues,
+}: {
+  yearLabel: string;
+  files: ExportFileRow[];
+  issues: ExportIssue[];
+}) {
+  const errorCount = issues.filter((issue) => issue.level === "error").length;
   return (
     <>
       <PageHeading
         title="CSV書き出し"
         description="マスタ・紐づけ・休み・行事を、8つのCSVにしてZIPで書き出します。担任のツールに取り込むファイルです。"
       />
-      <NotReadyNotice>
-        画面の形を確かめる段階です。書き出し前の確認と書き出しは、これから作ります。
-      </NotReadyNotice>
-      <EmptyState
-        title="書き出し前の確認"
-        action={
-          <Button variant="primary" disabled>
-            <Icon name="download" size={16} />
-            8つのCSVを書き出す
-          </Button>
-        }
-      >
+      <Callout kind="neutral">
         範囲: {yearLabel}
         に存在する有効なクラス、有効なマスタ。休み・行事は今年度と翌4/1〜4/11。
-        書き出したら、全担任に配ってください。
-      </EmptyState>
+      </Callout>
+      {errorCount > 0 ? (
+        <Callout kind="error">{MESSAGES.ME510(errorCount)}</Callout>
+      ) : (
+        <Callout kind="info">
+          書き出し前の確認: 直す必要があるものはありません。
+        </Callout>
+      )}
+      {issues.length > 0 && (
+        <div className="mb-6">
+          <TableWrap>
+            <thead>
+              <tr>
+                <Th>区分</Th>
+                <Th>確認</Th>
+                <Th>内容</Th>
+                <Th>対象</Th>
+                <Th>直す画面</Th>
+              </tr>
+            </thead>
+            <tbody>
+              {issues.map((issue, index) => (
+                <tr key={index}>
+                  <Td>
+                    <Badge kind={issue.level === "error" ? "error" : "warning"}>
+                      {issue.level === "error" ? "エラー" : "警告"}
+                    </Badge>
+                  </Td>
+                  <Td>
+                    {issue.check === null ? "—" : `R5-6 の${issue.check}`}
+                  </Td>
+                  <Td className="min-w-[280px] whitespace-normal">
+                    {issue.message}
+                  </Td>
+                  <Td className="whitespace-normal">{issue.target}</Td>
+                  <Td>
+                    {issue.fixPath !== "" && (
+                      <Link
+                        href={issue.fixPath}
+                        className="font-semibold text-brand-dark underline"
+                      >
+                        直す
+                      </Link>
+                    )}
+                  </Td>
+                </tr>
+              ))}
+            </tbody>
+          </TableWrap>
+        </div>
+      )}
+      <SectionHead
+        title="書き出すファイル"
+        description="エラーがなければ、この8つがZIPに入ります。"
+      />
+      <TableWrap>
+        <thead>
+          <tr>
+            <Th>ファイル</Th>
+            <Th>行数</Th>
+          </tr>
+        </thead>
+        <tbody>
+          {files.map((file) => (
+            <tr key={file.name}>
+              <Td>{file.name}</Td>
+              <Td>{file.rows}</Td>
+            </tr>
+          ))}
+        </tbody>
+      </TableWrap>
+      <form
+        method="post"
+        action="/admin/export/download"
+        className="mt-5 flex flex-wrap items-center gap-3"
+      >
+        <Button type="submit" variant="primary" disabled={errorCount > 0}>
+          <Icon name="download" size={16} />
+          8つのCSVを書き出す
+        </Button>
+        <span className="text-[11px] text-muted">
+          書き出したら、全担任に配ってください。
+        </span>
+      </form>
     </>
   );
 }

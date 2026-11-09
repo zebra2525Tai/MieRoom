@@ -37,6 +37,8 @@ import {
 } from "@/components/screens/timetable-view";
 import type { Role } from "@/lib/auth/policy";
 import { monthWindow } from "@/lib/domain/import-window";
+import { MASTER_FILES } from "@/lib/domain/master-csv";
+import type { ExportIssue } from "@/lib/domain/master-export";
 import {
   defaultPeriodNo,
   parsePeriodNo,
@@ -312,6 +314,32 @@ export type Sample = {
   bare?: boolean;
   element: ReactNode;
 };
+
+const EXPORT_ISSUES: ExportIssue[] = [
+  {
+    level: "error",
+    check: 3,
+    message: "「数学基礎」に、講師の行がありません(「各担当」でもよい)",
+    target: "大学併修1年",
+    fixPath: "/admin/links?tab=teachers",
+  },
+  {
+    level: "error",
+    check: 2,
+    message:
+      "ホームルーム教室「201」が、同じ年度の複数のクラスで重なっています",
+    target: "システム専攻1年、大学併修1年",
+    fixPath: "/admin/masters/classes",
+  },
+  {
+    level: "warning",
+    check: 6,
+    message:
+      "休み・行事が180行を超えています(185行)。ツールの上限は、担任が手で足した行も含めて200行です。",
+    target: "休み・行事.csv",
+    fixPath: "/admin/closures",
+  },
+];
 
 /** The sample of a screen: "s03", or "s21/teachers" for a tab. */
 export function sampleFor(
@@ -752,9 +780,19 @@ export function sampleFor(
         ),
       };
     case "s24":
+    case "s24-error":
       return {
         menuId: "s24",
-        element: <ExportView yearLabel={`今年度(${year}年度)`} />,
+        element: (
+          <ExportView
+            yearLabel={`今年度(${year}年度)`}
+            files={Object.values(MASTER_FILES).map((name, index) => ({
+              name,
+              rows: [12, 20, 52, 21, 74, 76, 74, 29][index],
+            }))}
+            issues={screen === "s24" ? [] : EXPORT_ISSUES}
+          />
+        ),
       };
     case "s25":
       return {
