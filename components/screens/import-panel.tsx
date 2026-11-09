@@ -134,13 +134,16 @@ export function ImportPanel() {
   const step = view === null ? (files.length > 0 ? 1 : 0) : view.ok ? 2 : 1;
   return (
     <div>
-      <ol className="mb-6 mt-2 flex max-w-[680px] items-center gap-3 text-xs">
+      {/* 狭い画面では、ラベルを番号の下に置く(単語の途中で折り返さない) */}
+      <ol className="mb-6 mt-2 flex max-w-[680px] items-start gap-3 text-xs sm:items-center">
         {["ファイルを選ぶ", "確認する", "取り込む"].map((label, index) => (
           <li key={label} className="contents">
-            {index > 0 && <div className="h-px min-w-6 flex-1 bg-[#d5dae6]" />}
+            {index > 0 && (
+              <div className="mt-[13px] h-px min-w-6 flex-1 bg-[#d5dae6] sm:mt-0" />
+            )}
             <div
               aria-current={index === step ? "step" : undefined}
-              className={`flex items-center gap-2 ${index === step ? "font-bold text-brand-dark" : "text-[#586579]"}`}
+              className={`flex flex-col items-center gap-1.5 whitespace-nowrap sm:flex-row sm:gap-2 ${index === step ? "font-bold text-brand-dark" : "text-[#586579]"}`}
             >
               <span
                 className={`grid h-[27px] w-[27px] place-items-center rounded-full text-[11px] font-bold ${

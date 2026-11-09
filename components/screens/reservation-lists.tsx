@@ -1,10 +1,12 @@
 import Form from "next/form";
+import type { ReactNode } from "react";
 import { AutoSubmitInput, AutoSubmitSelect } from "@/components/ui/auto-submit";
 import { Button, LinkButton } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import {
   Badge,
   Callout,
+  Card,
   EmptyState,
   FilterBar,
   PageHeading,
@@ -54,6 +56,167 @@ export type ReservationRow = {
 
 const NOT_READY = "予約の表ができるまで、ここには何も出ません。";
 
+// Where a table does not fit, each reservation becomes a card instead: the state
+// and the buttons must be visible without scrolling sideways. The 6-column tables
+// fit from xl (1280px); the 8-column one of S11 needs 2xl (1536px).
+// Written out in full so that Tailwind finds the class names.
+const LAYOUT = {
+  xl: {
+    table: "hidden xl:block",
+    cards: "grid gap-3 lg:grid-cols-2 xl:hidden",
+  },
+  "2xl": {
+    table: "hidden 2xl:block",
+    cards: "grid gap-3 lg:grid-cols-2 2xl:hidden",
+  },
+} as const;
+
+function SlotSummary({ row }: { row: ReservationRow }) {
+  return (
+    <>
+      <strong>{row.dateText}</strong>
+      <SubText>
+        {row.slotText} / {row.room}
+      </SubText>
+    </>
+  );
+}
+
+function StatusCell({ row }: { row: ReservationRow }) {
+  return (
+    <>
+      <StatusBadge status={row.status} />
+      {row.proxy && <SubText>代理</SubText>}
+    </>
+  );
+}
+
+function HandledCell({ row }: { row: ReservationRow }) {
+  return (
+    <>
+      {row.handledBy ?? "—"}
+      {row.handledText && <SubText>{row.handledText}</SubText>}
+    </>
+  );
+}
+
+function PurposeCell({ row }: { row: ReservationRow }) {
+  return (
+    <>
+      {row.purpose}
+      {row.note && <SubText>{row.note}</SubText>}
+    </>
+  );
+}
+
+/** Only while 承認待ち. */
+function WithdrawAction() {
+  return (
+    <Button size="sm" variant="danger">
+      取り下げ
+    </Button>
+  );
+}
+
+function ReviewActions({ row }: { row: ReservationRow }) {
+  if (row.status === "pending") {
+    return (
+      <div className="flex gap-2">
+        <Button
+          size="sm"
+          variant="primary"
+          disabled={row.blockedReason !== null}
+        >
+          承認
+        </Button>
+        <Button size="sm" variant="danger">
+          却下
+        </Button>
+      </div>
+    );
+  }
+  if (row.status === "approved") {
+    return (
+      <Button size="sm" variant="danger">
+        取消
+      </Button>
+    );
+  }
+  return null;
+}
+
+function ReviewNotes({ row }: { row: ReservationRow }) {
+  return (
+    <>
+      {row.warnings.map((text) => (
+        <span key={text} className="text-[11px] text-amber-ink">
+          {text}
+        </span>
+      ))}
+      {row.blockedReason && (
+        <span className="text-[11px] text-red-ink">{row.blockedReason}</span>
+      )}
+    </>
+  );
+}
+
+function hasNotes(row: ReservationRow) {
+  return row.warnings.length > 0 || row.blockedReason !== null;
+}
+
+function CardField({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <>
+      <dt className="text-muted">{label}</dt>
+      <dd className="min-w-0">{children}</dd>
+    </>
+  );
+}
+
+function ReservationCard({
+  row,
+  showStatus,
+  fields,
+  notes,
+  actions,
+}: {
+  row: ReservationRow;
+  showStatus: boolean;
+  fields: ReactNode;
+  notes?: ReactNode;
+  actions: ReactNode;
+}) {
+  return (
+    <li>
+      <Card className="flex h-full flex-col p-4 text-xs">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <SlotSummary row={row} />
+          </div>
+          {showStatus && (
+            <div className="shrink-0 text-right">
+              <StatusCell row={row} />
+            </div>
+          )}
+        </div>
+        <dl className="mt-3 grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1.5">
+          {fields}
+        </dl>
+        {notes && <div className="mt-3 flex flex-col gap-1">{notes}</div>}
+        {actions && (
+          <div className="mt-auto flex justify-end pt-3.5">{actions}</div>
+        )}
+      </Card>
+    </li>
+  );
+}
+
 // S07 自分の予約
 export function MyReservationsView({ rows }: { rows: ReservationRow[] }) {
   return (
@@ -76,52 +239,71 @@ export function MyReservationsView({ rows }: { rows: ReservationRow[] }) {
           {NOT_READY}
         </EmptyState>
       ) : (
-        <TableWrap>
-          <thead>
-            <tr>
-              <Th>日付・枠・教室</Th>
-              <Th>用途・備考</Th>
-              <Th>状態</Th>
-              <Th>対応した先生・日時</Th>
-              <Th>申請日時</Th>
-              <Th>操作</Th>
-            </tr>
-          </thead>
-          <tbody>
+        <>
+          <div className={LAYOUT.xl.table}>
+            <TableWrap>
+              <thead>
+                <tr>
+                  <Th>日付・枠・教室</Th>
+                  <Th>用途・備考</Th>
+                  <Th>状態</Th>
+                  <Th>対応した先生・日時</Th>
+                  <Th>申請日時</Th>
+                  <Th>操作</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row) => (
+                  <tr key={row.id}>
+                    <Td>
+                      <SlotSummary row={row} />
+                    </Td>
+                    <Td>
+                      <PurposeCell row={row} />
+                    </Td>
+                    <Td>
+                      <StatusCell row={row} />
+                    </Td>
+                    <Td>
+                      <HandledCell row={row} />
+                    </Td>
+                    <Td>{row.createdText}</Td>
+                    <Td>
+                      {row.status === "pending" ? (
+                        <WithdrawAction />
+                      ) : (
+                        <span className="text-muted">—</span>
+                      )}
+                    </Td>
+                  </tr>
+                ))}
+              </tbody>
+            </TableWrap>
+          </div>
+          <ul className={LAYOUT.xl.cards}>
             {rows.map((row) => (
-              <tr key={row.id}>
-                <Td>
-                  <strong>{row.dateText}</strong>
-                  <SubText>
-                    {row.slotText} / {row.room}
-                  </SubText>
-                </Td>
-                <Td>
-                  {row.purpose}
-                  {row.note && <SubText>{row.note}</SubText>}
-                </Td>
-                <Td>
-                  <StatusBadge status={row.status} />
-                  {row.proxy && <SubText>代理</SubText>}
-                </Td>
-                <Td>
-                  {row.handledBy ?? "—"}
-                  {row.handledText && <SubText>{row.handledText}</SubText>}
-                </Td>
-                <Td>{row.createdText}</Td>
-                <Td>
-                  {row.status === "pending" ? (
-                    <Button size="sm" variant="danger">
-                      取り下げ
-                    </Button>
-                  ) : (
-                    <span className="text-muted">—</span>
-                  )}
-                </Td>
-              </tr>
+              <ReservationCard
+                key={row.id}
+                row={row}
+                showStatus
+                fields={
+                  <>
+                    <CardField label="用途">
+                      <PurposeCell row={row} />
+                    </CardField>
+                    <CardField label="申請日時">{row.createdText}</CardField>
+                    {row.handledBy && (
+                      <CardField label="対応">
+                        <HandledCell row={row} />
+                      </CardField>
+                    )}
+                  </>
+                }
+                actions={row.status === "pending" ? <WithdrawAction /> : null}
+              />
             ))}
-          </tbody>
-        </TableWrap>
+          </ul>
+        </>
       )}
     </>
   );
@@ -134,90 +316,94 @@ function ReviewTable({
   rows: ReservationRow[];
   showHandled: boolean;
 }) {
+  const hasActions = (row: ReservationRow) =>
+    row.status === "pending" || row.status === "approved";
+  // The two extra columns of S11 make the table about 300px wider.
+  const layout = showHandled ? LAYOUT["2xl"] : LAYOUT.xl;
   return (
-    <TableWrap>
-      <thead>
-        <tr>
-          <Th>日付・枠・教室</Th>
-          <Th>用途・備考</Th>
-          <Th>申請者</Th>
-          <Th>申請日時</Th>
-          {showHandled && <Th>状態</Th>}
-          {showHandled && <Th>対応した先生・日時</Th>}
-          <Th>警告・理由</Th>
-          <Th>操作</Th>
-        </tr>
-      </thead>
-      <tbody>
+    <>
+      <div className={layout.table}>
+        <TableWrap>
+          <thead>
+            <tr>
+              <Th>日付・枠・教室</Th>
+              <Th>用途・備考</Th>
+              <Th>申請者</Th>
+              <Th>申請日時</Th>
+              {showHandled && <Th>状態</Th>}
+              {showHandled && <Th>対応した先生・日時</Th>}
+              <Th>警告・理由</Th>
+              <Th>操作</Th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.id}>
+                <Td>
+                  <SlotSummary row={row} />
+                </Td>
+                <Td>
+                  <PurposeCell row={row} />
+                </Td>
+                <Td>{row.applicant}</Td>
+                <Td>{row.createdText}</Td>
+                {showHandled && (
+                  <Td>
+                    <StatusCell row={row} />
+                  </Td>
+                )}
+                {showHandled && (
+                  <Td>
+                    <HandledCell row={row} />
+                  </Td>
+                )}
+                <Td className="whitespace-normal">
+                  <div className="flex min-w-[180px] flex-col gap-1">
+                    {hasNotes(row) ? (
+                      <ReviewNotes row={row} />
+                    ) : (
+                      <span className="text-muted">—</span>
+                    )}
+                  </div>
+                </Td>
+                <Td>
+                  {hasActions(row) ? (
+                    <ReviewActions row={row} />
+                  ) : (
+                    <span className="text-muted">—</span>
+                  )}
+                </Td>
+              </tr>
+            ))}
+          </tbody>
+        </TableWrap>
+      </div>
+      <ul className={layout.cards}>
         {rows.map((row) => (
-          <tr key={row.id}>
-            <Td>
-              <strong>{row.dateText}</strong>
-              <SubText>
-                {row.slotText} / {row.room}
-              </SubText>
-            </Td>
-            <Td>
-              {row.purpose}
-              {row.note && <SubText>{row.note}</SubText>}
-            </Td>
-            <Td>{row.applicant}</Td>
-            <Td>{row.createdText}</Td>
-            {showHandled && (
-              <Td>
-                <StatusBadge status={row.status} />
-                {row.proxy && <SubText>代理</SubText>}
-              </Td>
-            )}
-            {showHandled && (
-              <Td>
-                {row.handledBy ?? "—"}
-                {row.handledText && <SubText>{row.handledText}</SubText>}
-              </Td>
-            )}
-            <Td className="whitespace-normal">
-              <div className="flex min-w-[180px] flex-col gap-1">
-                {row.warnings.map((text) => (
-                  <span key={text} className="text-[11px] text-amber-ink">
-                    {text}
-                  </span>
-                ))}
-                {row.blockedReason && (
-                  <span className="text-[11px] text-red-ink">
-                    {row.blockedReason}
-                  </span>
+          <ReservationCard
+            key={row.id}
+            row={row}
+            showStatus={showHandled}
+            fields={
+              <>
+                <CardField label="用途">
+                  <PurposeCell row={row} />
+                </CardField>
+                <CardField label="申請者">{row.applicant}</CardField>
+                <CardField label="申請日時">{row.createdText}</CardField>
+                {showHandled && row.handledBy && (
+                  <CardField label="対応">
+                    <HandledCell row={row} />
+                  </CardField>
                 )}
-                {row.warnings.length === 0 && !row.blockedReason && (
-                  <span className="text-muted">—</span>
-                )}
-              </div>
-            </Td>
-            <Td>
-              {row.status === "pending" ? (
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="primary"
-                    disabled={row.blockedReason !== null}
-                  >
-                    承認
-                  </Button>
-                  <Button size="sm" variant="danger">
-                    却下
-                  </Button>
-                </div>
-              ) : row.status === "approved" ? (
-                <Button size="sm" variant="danger">
-                  取消
-                </Button>
-              ) : (
-                <span className="text-muted">—</span>
-              )}
-            </Td>
-          </tr>
+              </>
+            }
+            notes={hasNotes(row) ? <ReviewNotes row={row} /> : null}
+            actions={hasActions(row) ? <ReviewActions row={row} /> : null}
+          />
         ))}
-      </tbody>
-    </TableWrap>
+      </ul>
+    </>
   );
 }
 

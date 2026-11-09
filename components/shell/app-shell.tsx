@@ -35,9 +35,6 @@ export function AppShell({
   const current: NavItem | null = sampleScreenId
     ? itemById(sampleScreenId)
     : activeItem(pathname);
-  const currentSection = sections.find((section) =>
-    section.items.some((item) => item.id === current?.id),
-  );
 
   return (
     <div className="min-h-screen sm:grid sm:grid-cols-[190px_minmax(0,1fr)] lg:grid-cols-[230px_minmax(0,1fr)] print:block">
@@ -106,11 +103,8 @@ export function AppShell({
             >
               <Icon name="menu" />
             </button>
-            <div className="text-xs text-[#586579]">
-              {currentSection?.label ?? "ミエルーム"}
-              {current && (
-                <span className="ml-2 text-[#4a576c]">/ {current.label}</span>
-              )}
+            <div className="text-xs text-[#4a576c]">
+              {current?.label ?? "ミエルーム"}
             </div>
           </div>
           <div className="flex items-center gap-3">
