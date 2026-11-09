@@ -1,6 +1,7 @@
 import { getSessionCookie } from "better-auth/cookies";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { LOGIN_ERROR_MESSAGES } from "@/lib/messages";
 
 // Two jobs, both before a page is rendered:
 //  1. Content-Security-Policy with a fresh nonce on every request.
@@ -52,6 +53,15 @@ export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
   if (!isPublic(pathname) && !getSessionCookie(request)) {
+    // Not a page the browser is opening (a POST from a screen, a Server Action, an upload):
+    // answer 401 with a short message instead of redirecting. The screen shows the message;
+    // a redirect would hand it the HTML of the sign-in page and replay a POST elsewhere.
+    if (request.method !== "GET" && request.method !== "HEAD") {
+      return NextResponse.json(
+        { message: LOGIN_ERROR_MESSAGES.ME005 },
+        { status: 401, headers: { "Cache-Control": "no-store" } },
+      );
+    }
     const loginUrl = new URL("/login", request.url);
     // Only a path on this site can be remembered; anything else is dropped.
     loginUrl.searchParams.set("next", `${pathname}${search}`);
