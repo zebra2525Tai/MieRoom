@@ -876,7 +876,36 @@ export function sampleFor(
         ),
       };
     case "s26":
-      return { menuId: "s26", element: <DeleteView /> };
+      return {
+        menuId: "s26",
+        element: (
+          <DeleteView
+            tab="rooms"
+            rows={[
+              {
+                id: "r1",
+                name: "旧展示室",
+                canDelete: false,
+                reasons: [
+                  "今日以降の授業2件",
+                  "ホームルーム教室(デザイン科1年)",
+                ],
+                impacts: ["過去の授業12件は名前だけ残る"],
+              },
+              {
+                id: "r2",
+                name: "旧倉庫",
+                canDelete: true,
+                reasons: [],
+                impacts: [
+                  "過去の授業0件は名前だけ残る",
+                  "終わった予約3件・終わった使用止め1件も一緒に消える",
+                ],
+              },
+            ]}
+          />
+        ),
+      };
     case "s27":
       return { menuId: "s27", element: <MonitorsView /> };
     default:

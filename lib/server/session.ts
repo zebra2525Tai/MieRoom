@@ -114,3 +114,10 @@ export async function requireFreshSession(): Promise<void> {
     throw new Error("ME006");
   }
 }
+
+/** True when the signed-in user signed in less than 5 minutes ago (S26 再認証, 3-4). */
+export async function hasFreshSession(): Promise<boolean> {
+  const session = await getAuth().api.getSession({ headers: await headers() });
+  if (!session) return false;
+  return isFreshSession(new Date(session.session.createdAt), new Date());
+}

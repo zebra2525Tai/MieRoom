@@ -25,6 +25,7 @@ import {
   type LinkChoices,
 } from "./link-editor";
 import { ClosureDeleteButton, ClosureEditButton } from "./closure-editor";
+import { DeleteButton } from "./delete-button";
 import { MasterActiveButton, MasterEditButton } from "./master-editor";
 import {
   ReceiverAddForm,
@@ -874,19 +875,100 @@ export function AccessView({
 }
 
 // S26 削除管理
-export function DeleteView() {
+export type DeleteRow = {
+  id: string;
+  name: string;
+  canDelete: boolean;
+  reasons: string[];
+  impacts: string[];
+};
+
+const DELETE_TABS: { tab: MasterTab; label: string }[] = MASTER_TABS;
+
+export function DeleteView({
+  tab,
+  rows,
+  notice,
+  basePath = "/admin/delete",
+}: {
+  tab: MasterTab;
+  rows: DeleteRow[];
+  /** MI503: what was just done */
+  notice?: string | null;
+  basePath?: string;
+}) {
   return (
     <>
       <PageHeading
         title="削除管理"
-        description="無効にしたマスタのうち、使われていないものを削除します。5分以内にログインし直していることが必要です。"
+        description="無効にしたマスタのうち、使われていないものを削除します。削除は戻せません。5分以内にログインし直していることが必要です。"
       />
-      <NotReadyNotice>
-        画面の形を確かめる段階です。削除の判定は、授業・予約の表ができてから作ります。
-      </NotReadyNotice>
-      <EmptyState title="削除できるものを、ここに出します">
-        名前、削除できるか、使われている理由、削除したときの影響を一覧にします。
-      </EmptyState>
+      {notice && (
+        <Callout icon="check" className="mb-3" key={notice}>
+          {notice}
+        </Callout>
+      )}
+      <Tabs
+        label="削除するものの種類"
+        items={DELETE_TABS.map((item) => ({
+          label: item.label,
+          href: withQuery(basePath, { tab: item.tab }),
+          active: tab === item.tab,
+        }))}
+      />
+      {rows.length === 0 ? (
+        <EmptyState title="無効にしたものは、ありません">
+          削除するには、先に「マスタ」で無効にしてください。
+        </EmptyState>
+      ) : (
+        <TableWrap>
+          <thead>
+            <tr>
+              <Th>名前</Th>
+              <Th>削除できるか</Th>
+              <Th>使われている理由</Th>
+              <Th>削除したときの影響</Th>
+              <Th>操作</Th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.id}>
+                <Td>
+                  <strong>{row.name}</strong>
+                </Td>
+                <Td>
+                  <Badge kind={row.canDelete ? "available" : "neutral"}>
+                    {row.canDelete ? "できる" : "できない"}
+                  </Badge>
+                </Td>
+                <Td className="whitespace-normal">
+                  {row.reasons.length > 0 ? (
+                    row.reasons.join("、")
+                  ) : (
+                    <span className="text-muted">—</span>
+                  )}
+                </Td>
+                <Td className="whitespace-normal">
+                  {row.impacts.join("。") || "—"}
+                </Td>
+                <Td>
+                  {row.canDelete ? (
+                    <DeleteButton
+                      kind={tab}
+                      id={row.id}
+                      name={row.name}
+                      impacts={row.impacts}
+                    />
+                  ) : (
+                    <span className="text-muted">—</span>
+                  )}
+                </Td>
+              </tr>
+            ))}
+          </tbody>
+        </TableWrap>
+      )}
     </>
   );
 }
