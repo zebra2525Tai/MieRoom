@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-button";
 import { Field, fieldClass, textareaClass } from "@/components/ui/form";
 import { Callout, Card } from "@/components/ui/parts";
 import { PURPOSES, NOTE_MAX_LENGTH } from "@/lib/domain/reservation-core";
@@ -20,7 +21,11 @@ const selectable = (status: SlotStatus) =>
 async function post(
   endpoint: string,
   body: unknown,
-): Promise<{ ok: true; notice: string } | { ok: false; issues: Issue[] }> {
+): Promise<
+  | { kind: "ok"; notice: string }
+  | { kind: "confirm"; message: string }
+  | { kind: "issues"; issues: Issue[] }
+> {
   try {
     const response = await fetch(endpoint, {
       method: "POST",
@@ -33,19 +38,30 @@ async function post(
         ? (data as Record<string, unknown>)
         : {};
     if (response.ok && typeof record.notice === "string") {
-      return { ok: true, notice: record.notice };
+      return { kind: "ok", notice: record.notice };
+    }
+    // MC201: the server asks first (an approved reservation is on the same slots).
+    if (
+      response.status === 409 &&
+      record.confirm === true &&
+      typeof record.message === "string"
+    ) {
+      return { kind: "confirm", message: record.message };
     }
     if (Array.isArray(record.issues)) {
-      return { ok: false, issues: record.issues as Issue[] };
+      return { kind: "issues", issues: record.issues as Issue[] };
     }
     const message =
       typeof record.message === "string"
         ? record.message
         : SYSTEM_ERROR_MESSAGE;
-    return { ok: false, issues: [{ code: "", field: "slots", message }] };
+    return {
+      kind: "issues",
+      issues: [{ code: "", field: "slots", message }],
+    };
   } catch {
     return {
-      ok: false,
+      kind: "issues",
       issues: [{ code: "ME901", field: "slots", message: MESSAGES.ME901 }],
     };
   }
@@ -63,7 +79,8 @@ export function ReservationForm({
   statuses,
   submitLabel,
   applicantLabel,
-  disabled = false,
+  mode,
+  homeroomNotes,
 }: {
   endpoint: string;
   successPath: string;
@@ -73,7 +90,9 @@ export function ReservationForm({
   statuses: Record<SlotNo, SlotStatus> | null;
   submitLabel: string;
   applicantLabel: string;
-  disabled?: boolean;
+  mode: "apply" | "proxy";
+  /** S12 only: for each slot, the classes behind MW203 */
+  homeroomNotes?: Record<number, string[]>;
 }) {
   const router = useRouter();
   const [chosen, setChosen] = useState<Set<number>>(() =>
@@ -90,33 +109,45 @@ export function ReservationForm({
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [issues, setIssues] = useState<Issue[]>([]);
+  const [question, setQuestion] = useState<string | null>(null);
 
   const errorOf = (field: FieldName) =>
     issues.find((issue) => issue.field === field)?.message;
   const kinds = new Set([...chosen].map((n) => statuses?.[n as SlotNo]?.kind));
+  // MW203 (S12 only): the homeroom classes that have a lesson without a room at that time.
+  const homeroomClasses = [
+    ...new Set([...chosen].flatMap((n) => homeroomNotes?.[n] ?? [])),
+  ];
+
+  const submit = async (confirmed: boolean) => {
+    if (busy || roomId === null) return;
+    setBusy(true);
+    setIssues([]);
+    setQuestion(null);
+    const result = await post(endpoint, {
+      roomId,
+      date,
+      slots: [...chosen].sort((a, b) => a - b),
+      purpose,
+      note,
+      ...(mode === "proxy" ? { confirmed } : {}),
+    });
+    if (result.kind === "ok") {
+      router.push(`${successPath}?notice=${result.notice}`);
+      return;
+    }
+    if (result.kind === "confirm") setQuestion(result.message);
+    else setIssues(result.issues);
+    setBusy(false);
+  };
 
   return (
     <Card className="p-5 sm:p-6">
       <form
         className="flex flex-col gap-5"
-        onSubmit={async (event) => {
+        onSubmit={(event) => {
           event.preventDefault();
-          if (busy || roomId === null) return;
-          setBusy(true);
-          setIssues([]);
-          const result = await post(endpoint, {
-            roomId,
-            date,
-            slots: [...chosen].sort((a, b) => a - b),
-            purpose,
-            note,
-          });
-          if (result.ok) {
-            router.push(`${successPath}?notice=${result.notice}`);
-            return;
-          }
-          setIssues(result.issues);
-          setBusy(false);
+          void submit(false);
         }}
       >
         <fieldset>
@@ -184,14 +215,19 @@ export function ReservationForm({
               {errorOf("date")}
             </p>
           )}
-          {kinds.has("pending") && (
+          {mode === "apply" && kinds.has("pending") && (
             <Callout kind="warning" className="mt-3">
               {MESSAGES.MW101}
             </Callout>
           )}
           {kinds.has("reserved") && (
             <Callout kind="warning" className="mt-3">
-              {MESSAGES.MW102}
+              {mode === "apply" ? MESSAGES.MW102 : MESSAGES.MW202}
+            </Callout>
+          )}
+          {mode === "proxy" && homeroomClasses.length > 0 && (
+            <Callout kind="warning" className="mt-3">
+              {MESSAGES.MW203(homeroomClasses.join("、"))}
             </Callout>
           )}
         </fieldset>
@@ -237,12 +273,19 @@ export function ReservationForm({
           <Button
             type="submit"
             variant="primary"
-            disabled={disabled || busy || roomId === null || chosen.size === 0}
+            disabled={busy || roomId === null || chosen.size === 0}
           >
             {submitLabel}
           </Button>
         </div>
       </form>
+      <ConfirmDialog
+        open={question !== null}
+        message={question ?? ""}
+        busy={busy}
+        onNo={() => setQuestion(null)}
+        onYes={() => void submit(true)}
+      />
     </Card>
   );
 }

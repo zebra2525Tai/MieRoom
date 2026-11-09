@@ -155,7 +155,7 @@ export async function listMyReservations(
       handledText: row.handledAt ? schoolDateTimeText(row.handledAt) : null,
       proxy: row.proxy,
       warnings: [],
-      blockedReason: null,
+      blockedReasons: [],
     })),
     hasNext: ordered.length > start + PAGE_SIZE,
   };

@@ -3,6 +3,12 @@ import { randomUUID } from "node:crypto";
 import type { Prisma } from "@/generated/prisma/client";
 import type { ClosureItem } from "@/lib/domain/closures";
 import { monthWindow } from "@/lib/domain/import-window";
+import type { PeriodNo, SlotNo } from "@/lib/domain/periods";
+import {
+  lessonsInBlocks,
+  reservationsTouchedByLessons,
+  type NewLesson,
+} from "@/lib/domain/reservation-core";
 import { MESSAGES } from "@/lib/messages";
 import {
   addMonths,
@@ -74,18 +80,15 @@ async function loadUnlocked(): Promise<Set<string>> {
 }
 
 /**
- * MW703 (R3-12): lessons changed in the system (a different room or teacher, 休講, 補講)
- * inside what each file would replace. One query for all files.
+ * What each file replaces (R3-2, R3-6): its month, and the first days of the next month while the
+ * class has no file of that month. One query for all files.
  */
-async function countSystemChanges(
+async function loadReplaceRanges(
   targets: { className: string; month: string }[],
-): Promise<Map<string, number>> {
-  const result = new Map<string, number>();
-  if (targets.length === 0) return result;
-  const db = getDb();
+): Promise<Map<string, { from: string; to: string }[]>> {
   const classNames = [...new Set(targets.map((t) => t.className))];
   const months = [...new Set(targets.map((t) => addMonths(t.month, 1)))];
-  const imported = await db.monthStatus.findMany({
+  const imported = await getDb().monthStatus.findMany({
     where: {
       class: { name: { in: classNames } },
       month: { in: months.map(monthKey) },
@@ -96,7 +99,7 @@ async function countSystemChanges(
   const nextImported = new Set(
     imported.map((r) => `${r.class.name}|${r.month}`),
   );
-  const ranges = new Map(
+  return new Map(
     targets.map((t) => [
       `${t.className}|${t.month}`,
       replaceRanges(
@@ -105,6 +108,20 @@ async function countSystemChanges(
       ),
     ]),
   );
+}
+
+/**
+ * MW703 (R3-12): lessons changed in the system (a different room or teacher, 休講, 補講)
+ * inside what each file would replace. One query for all files.
+ */
+async function countSystemChanges(
+  targets: { className: string; month: string }[],
+): Promise<Map<string, number>> {
+  const result = new Map<string, number>();
+  if (targets.length === 0) return result;
+  const db = getDb();
+  const classNames = [...new Set(targets.map((t) => t.className))];
+  const ranges = await loadReplaceRanges(targets);
   const all = [...ranges.values()].flat();
   const from = all.map((r) => r.from).sort()[0];
   const to = all
@@ -133,6 +150,87 @@ async function countSystemChanges(
       );
     }).length;
     if (count > 0) result.set(key, count);
+  }
+  return result;
+}
+
+/**
+ * MW402, MW403 (R4-12): for each file, the approved reservations and the 使用止め that the new
+ * lessons would overlap. Only a warning: the import is not stopped.
+ */
+async function countReservationOverlaps(
+  items: ImportItem[],
+): Promise<Map<string, { reservations: number; blocked: number }>> {
+  const result = new Map<string, { reservations: number; blocked: number }>();
+  if (items.length === 0) return result;
+  const db = getDb();
+  const ranges = await loadReplaceRanges(
+    items.map((item) => ({ className: item.className, month: item.month })),
+  );
+  const keep = (item: ImportItem): NewLesson[] =>
+    item.lessons
+      .filter((lesson) =>
+        ranges
+          .get(`${item.className}|${item.month}`)!
+          .some((r) => lesson.date >= r.from && lesson.date <= r.to),
+      )
+      .map((lesson) => ({
+        date: lesson.date,
+        startMinutes: lesson.startMinutes,
+        endMinutes: lesson.endMinutes,
+        room: lesson.room,
+      }));
+  const lessonsOf = new Map(items.map((item) => [item, keep(item)]));
+  const dates = [...lessonsOf.values()]
+    .flat()
+    .map((l) => l.date)
+    .sort();
+  if (dates.length === 0) return result;
+  const from = textToDateColumn(dates[0]);
+  const to = textToDateColumn(dates.at(-1)!);
+  const [reservations, blocks] = await Promise.all([
+    db.reservation.findMany({
+      where: { status: "APPROVED", date: { gte: from, lte: to } },
+      select: {
+        id: true,
+        date: true,
+        room: { select: { name: true } },
+        slots: { select: { slot: true } },
+      },
+    }),
+    db.roomBlock.findMany({
+      where: { startDate: { lte: to }, endDate: { gte: from } },
+      select: {
+        startDate: true,
+        startPeriod: true,
+        endDate: true,
+        endPeriod: true,
+        room: { select: { name: true } },
+      },
+    }),
+  ]);
+  const approved = reservations.map((r) => ({
+    id: r.id,
+    room: r.room.name,
+    date: dateColumnToText(r.date),
+    slots: r.slots.map((s) => s.slot) as SlotNo[],
+  }));
+  const ranges4 = blocks.map((b) => ({
+    room: b.room.name,
+    startDate: dateColumnToText(b.startDate),
+    startPeriod: b.startPeriod as PeriodNo,
+    endDate: dateColumnToText(b.endDate),
+    endPeriod: b.endPeriod as PeriodNo,
+  }));
+  for (const item of items) {
+    const lessons = lessonsOf.get(item)!;
+    const counts = {
+      reservations: reservationsTouchedByLessons(lessons, approved),
+      blocked: lessonsInBlocks(lessons, ranges4),
+    };
+    if (counts.reservations > 0 || counts.blocked > 0) {
+      result.set(`${item.className}|${item.month}`, counts);
+    }
   }
   return result;
 }
@@ -169,6 +267,30 @@ export async function runCheck(
       line: null,
       message: MESSAGES.MW703(count),
     });
+    file.verdict = "warning";
+  }
+  // MW402, MW403: known only when the files can be imported (the parsed lessons are kept then).
+  const overlaps = await countReservationOverlaps(check.items);
+  for (const file of check.files) {
+    if (file.className === null || file.month === null) continue;
+    const found = overlaps.get(`${file.className}|${file.month}`);
+    if (!found) continue;
+    if (found.reservations > 0) {
+      file.issues.push({
+        level: "warning",
+        code: "MW402",
+        line: null,
+        message: MESSAGES.MW402(found.reservations),
+      });
+    }
+    if (found.blocked > 0) {
+      file.issues.push({
+        level: "warning",
+        code: "MW403",
+        line: null,
+        message: MESSAGES.MW403(found.blocked),
+      });
+    }
     file.verdict = "warning";
   }
   return {

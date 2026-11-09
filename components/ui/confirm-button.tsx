@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type ComponentProps } from "react";
+import { useEffect, useRef, useState, type ComponentProps } from "react";
 import { Button } from "./button";
 
 // A button that asks first (確認の窓, 6-3): 取り消せない操作の前に出す。
@@ -65,5 +65,50 @@ export function ConfirmButton({
         </div>
       </dialog>
     </>
+  );
+}
+
+/** The same window, opened and closed by the caller (when the question comes from the server). */
+export function ConfirmDialog({
+  open,
+  message,
+  busy = false,
+  confirmLabel = "はい",
+  cancelLabel = "いいえ",
+  onYes,
+  onNo,
+}: {
+  open: boolean;
+  message: string;
+  busy?: boolean;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  onYes: () => void;
+  onNo: () => void;
+}) {
+  const dialog = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    const element = dialog.current;
+    if (!element) return;
+    if (open && !element.open) element.showModal();
+    if (!open && element.open) element.close();
+  }, [open]);
+  return (
+    <dialog
+      ref={dialog}
+      aria-label="確認"
+      onCancel={onNo}
+      className="m-auto w-[min(92vw,420px)] rounded-xl border border-line bg-white p-5 text-xs text-ink shadow-xl backdrop:bg-black/40"
+    >
+      <p className="mb-4 text-[13px] leading-relaxed">{message}</p>
+      <div className="flex justify-end gap-2">
+        <Button onClick={onNo} disabled={busy}>
+          {cancelLabel}
+        </Button>
+        <Button variant="primary" onClick={onYes} disabled={busy}>
+          {confirmLabel}
+        </Button>
+      </div>
+    </dialog>
   );
 }

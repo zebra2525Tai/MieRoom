@@ -501,3 +501,56 @@ export function orderMine<T extends { date: string; slots: readonly SlotNo[] }>(
     .sort((a, b) => compareByStart(b, a));
   return [...upcoming, ...over];
 }
+
+// ---------------------------------------------------------------- the timetable and 予約 (R4-12)
+
+export type NewLesson = {
+  date: string;
+  startMinutes: number;
+  endMinutes: number;
+  /** The room's name; null: 教室未定 (it takes no room) */
+  room: string | null;
+};
+
+/**
+ * MW402: how many approved reservations a new timetable's lessons overlap. By time, in the same
+ * room on the same day; a lesson ending when a slot starts does not overlap it (R3-1).
+ */
+export function reservationsTouchedByLessons(
+  lessons: readonly NewLesson[],
+  reservations: readonly {
+    id: string;
+    room: string;
+    date: string;
+    slots: readonly SlotNo[];
+  }[],
+): number {
+  return reservations.filter((reservation) =>
+    lessons.some(
+      (lesson) =>
+        lesson.room === reservation.room &&
+        lesson.date === reservation.date &&
+        reservation.slots.some(
+          (n) =>
+            lesson.startMinutes < toMinutes(SLOTS[n - 1].end) &&
+            lesson.endMinutes > toMinutes(SLOTS[n - 1].start),
+        ),
+    ),
+  ).length;
+}
+
+/** MW403: how many of the new lessons fall in a 使用止め of their room. */
+export function lessonsInBlocks(
+  lessons: readonly NewLesson[],
+  blocks: readonly (BlockRange & { room: string })[],
+): number {
+  return lessons.filter(
+    (lesson) =>
+      lesson.room !== null &&
+      blocks.some(
+        (block) =>
+          block.room === lesson.room &&
+          lessonInBlock(block, { ...lesson, cancelled: false }),
+      ),
+  ).length;
+}

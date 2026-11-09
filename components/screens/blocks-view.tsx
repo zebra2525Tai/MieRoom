@@ -1,9 +1,8 @@
-import { Button } from "@/components/ui/button";
-import { Field, fieldClass } from "@/components/ui/form";
+import { LinkButton } from "@/components/ui/button";
 import {
+  Callout,
   Card,
   EmptyState,
-  NotReadyNotice,
   PageHeading,
   SectionHead,
   SubText,
@@ -11,10 +10,14 @@ import {
   Td,
   Th,
 } from "@/components/ui/parts";
-import { PERIODS } from "@/lib/domain/periods";
+import { MESSAGES } from "@/lib/messages";
+import { withQuery } from "@/lib/url";
+import { BlockForm } from "./block-form";
+import { ReleaseBlockButton } from "./review-buttons";
 
 export type BlockRow = {
   id: string;
+  roomId: string;
   room: string;
   rangeText: string;
   setBy: string;
@@ -28,10 +31,16 @@ export function BlocksView({
   rows,
   rooms,
   today,
+  notice,
+  overlaps,
 }: {
   rows: BlockRow[];
   rooms: { id: string; name: string }[];
   today: string;
+  /** MI301 / MI302: what was just done */
+  notice?: string | null;
+  /** MW301, MW302: what the block just set touches (it is saved all the same) */
+  overlaps?: { reservations: number; lessons: number } | null;
 }) {
   return (
     <>
@@ -39,65 +48,25 @@ export function BlocksView({
         title="使用止め"
         description="教室を、日付と時限の範囲で予約できなくします。どの先生でも設定・解除できます。"
       />
-      <NotReadyNotice>
-        画面の形を確かめる段階です。使用止めの表ができてから、設定できるようになります。
-      </NotReadyNotice>
+      {notice && (
+        <Callout icon="check" className="mb-3" key={notice}>
+          {notice}
+        </Callout>
+      )}
+      {overlaps && overlaps.reservations > 0 && (
+        <Callout kind="warning" icon="info" className="mb-3">
+          {MESSAGES.MW301(overlaps.reservations)}
+        </Callout>
+      )}
+      {overlaps && overlaps.lessons > 0 && (
+        <Callout kind="warning" icon="info" className="mb-3">
+          {MESSAGES.MW302(overlaps.lessons)}
+        </Callout>
+      )}
 
-      <Card className="p-5 sm:p-6">
+      <Card className="mb-2 p-5 sm:p-6">
         <h2 className="mb-4 text-base font-bold">追加</h2>
-        <form className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_110px_minmax(0,1fr)_110px_auto] md:items-end">
-          <Field label="教室" required>
-            <select name="room" defaultValue="" className={fieldClass}>
-              <option value="" disabled>
-                選んでください
-              </option>
-              {rooms.map((room) => (
-                <option key={room.id} value={room.id}>
-                  {room.name}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label="開始日" required>
-            <input
-              type="date"
-              name="startDate"
-              min={today}
-              defaultValue={today}
-              className={fieldClass}
-            />
-          </Field>
-          <Field label="開始の時限" required>
-            <select name="startPeriod" className={fieldClass}>
-              {PERIODS.map((period) => (
-                <option key={period.no} value={period.no}>
-                  {period.label}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label="終了日" required>
-            <input
-              type="date"
-              name="endDate"
-              min={today}
-              defaultValue={today}
-              className={fieldClass}
-            />
-          </Field>
-          <Field label="終了の時限" required>
-            <select name="endPeriod" defaultValue={4} className={fieldClass}>
-              {PERIODS.map((period) => (
-                <option key={period.no} value={period.no}>
-                  {period.label}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Button type="submit" variant="primary" className="h-[41px]" disabled>
-            設定する
-          </Button>
-        </form>
+        <BlockForm rooms={rooms} today={today} />
       </Card>
 
       <SectionHead
@@ -129,13 +98,22 @@ export function BlocksView({
                   <SubText>{row.setText}</SubText>
                 </Td>
                 <Td>
-                  承認済みの予約 {row.overlapReservations}件 / 授業{" "}
-                  {row.overlapLessons}件
+                  {row.overlapReservations > 0 ? (
+                    <LinkButton
+                      size="sm"
+                      href={withQuery("/teacher/reservations", {
+                        block: row.id,
+                      })}
+                    >
+                      承認済みの予約 {row.overlapReservations}件
+                    </LinkButton>
+                  ) : (
+                    <>承認済みの予約 0件</>
+                  )}{" "}
+                  / 授業 {row.overlapLessons}件
                 </Td>
                 <Td>
-                  <Button size="sm" variant="danger">
-                    解除
-                  </Button>
+                  <ReleaseBlockButton id={row.id} />
                 </Td>
               </tr>
             ))}

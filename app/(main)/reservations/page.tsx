@@ -1,12 +1,9 @@
 import { MyReservationsView } from "@/components/screens/reservation-lists";
-import { MESSAGES } from "@/lib/messages";
 import { schoolToday } from "@/lib/domain/school-date";
+import { noticeText, pageNumber } from "@/lib/notice";
 import { listMyReservations } from "@/lib/server/queries/reservations";
 import { requireUser } from "@/lib/server/session";
 import { one } from "@/lib/url";
-
-// What was just done (MI101, MI102). Only these two ids are accepted from the address.
-const NOTICES = { MI101: MESSAGES.MI101, MI102: MESSAGES.MI102 } as const;
 
 // S07 自分の予約
 export default async function MyReservationsPage({
@@ -15,9 +12,7 @@ export default async function MyReservationsPage({
   const user = await requireUser();
   const params = await searchParams;
   const now = new Date();
-  const requested = Number(one(params.page));
-  const page = Number.isInteger(requested) && requested >= 1 ? requested : 1;
-  const notice = one(params.notice);
+  const page = pageNumber(one(params.page));
   const { rows, hasNext } = await listMyReservations(
     user.id,
     schoolToday(now),
@@ -29,11 +24,7 @@ export default async function MyReservationsPage({
       rows={rows}
       page={page}
       hasNext={hasNext}
-      notice={
-        notice !== undefined && Object.hasOwn(NOTICES, notice)
-          ? NOTICES[notice as keyof typeof NOTICES]
-          : null
-      }
+      notice={noticeText(one(params.notice))}
     />
   );
 }

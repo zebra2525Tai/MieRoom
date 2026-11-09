@@ -1,7 +1,7 @@
 import Form from "next/form";
 import { AutoSubmitInput, AutoSubmitSelect } from "@/components/ui/auto-submit";
 import { Field, fieldClass } from "@/components/ui/form";
-import { Card, NotReadyNotice, PageHeading } from "@/components/ui/parts";
+import { Card, PageHeading } from "@/components/ui/parts";
 import type { PeriodNo } from "@/lib/domain/periods";
 import type { ApplicationCheck } from "@/lib/domain/reservation-rules";
 import type { RoomRow } from "@/lib/domain/room-status";
@@ -38,6 +38,7 @@ export function ReservationFormView({
   periodNo,
   check,
   basePath,
+  homeroomNotes,
 }: {
   mode: "apply" | "proxy";
   rooms: RoomRow[];
@@ -47,6 +48,8 @@ export function ReservationFormView({
   periodNo: PeriodNo | null;
   check: ApplicationCheck;
   basePath: string;
+  /** S12 only: for each slot, the classes behind MW203 */
+  homeroomNotes?: Record<number, string[]>;
 }) {
   const room = rooms.find((item) => item.id === roomId) ?? null;
   const error = checkMessage(check, date, today);
@@ -60,11 +63,6 @@ export function ReservationFormView({
             : "先生が予約を入れます。保存すると、その場で承認済みになります。"
         }
       />
-      {mode === "proxy" && (
-        <NotReadyNotice>
-          代理入力は、次の段階で動くようにします。いまは保存できません。
-        </NotReadyNotice>
-      )}
 
       <Card className="mb-4 p-5 sm:p-6">
         <Form action={basePath} className="grid gap-4 sm:grid-cols-2">
@@ -125,7 +123,8 @@ export function ReservationFormView({
         applicantLabel={
           mode === "apply" ? "ログイン中の人" : "ログイン中の先生"
         }
-        disabled={mode === "proxy"}
+        mode={mode}
+        homeroomNotes={homeroomNotes}
       />
     </>
   );

@@ -26,15 +26,16 @@ import type { CurrentUser } from "./session";
 // Writing 予約 (S06, S07). The routes have already checked the site, the sign-in and the role;
 // the rules (R4-2〜R4-5) are checked again here, on the server, for every request.
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+export const UUID =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export type IssueView = {
   code: string;
-  field: "room" | "date" | "slots" | "purpose" | "note";
+  field: "room" | "date" | "slots" | "purpose" | "note" | "general";
   message: string;
 };
 
-const FIELD: Record<ApplicationIssue["code"], IssueView["field"]> = {
+export const FIELD: Record<ApplicationIssue["code"], IssueView["field"]> = {
   ME101: "date",
   ME102: "date",
   ME103: "date",
@@ -55,7 +56,7 @@ export type ApplyResult =
  * The state of the room's slots that are fixed (授業 and 使用止め), for the checks. Reservations
  * are left out: other requests and approved reservations on the same slots are only warnings.
  */
-async function loadFixedSlots(roomId: string, date: string, now: Date) {
+export async function loadFixedSlots(roomId: string, date: string, now: Date) {
   const db = getDb();
   const [lessons, overlays] = await Promise.all([
     db.lesson.findMany({

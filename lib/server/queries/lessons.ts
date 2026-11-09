@@ -89,7 +89,7 @@ function toView(row: LessonRow, withClassName: boolean): LessonView {
 }
 
 /** The months a date asks about: its own, and the one before (a provisional day, R3-6). */
-function monthsAround(dates: string[]): string[] {
+export function monthsAround(dates: string[]): string[] {
   const months = new Set<string>();
   for (const date of dates) {
     months.add(date.slice(0, 7));
@@ -99,7 +99,7 @@ function monthsAround(dates: string[]): string[] {
 }
 
 /** 取り込みの状況 (E12) of the classes, by month. null: every class. */
-async function loadMonthStates(
+export async function loadMonthStates(
   classIds: string[] | null,
   months: string[],
 ): Promise<Map<string, MonthStates>> {
@@ -133,7 +133,7 @@ async function loadMonthStates(
   return byClass;
 }
 
-const NO_STATES: MonthStates = new Map();
+export const NO_STATES: MonthStates = new Map();
 
 /**
  * The days of S03, for one class or for one teacher (all classes). A day is 入力済み when

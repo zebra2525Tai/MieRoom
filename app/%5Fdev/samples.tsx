@@ -191,7 +191,7 @@ function reservationRows(today: string): ReservationRow[] {
     handledBy: null,
     handledText: null,
     warnings: [],
-    blockedReason: null,
+    blockedReasons: [],
   };
   return [
     {
@@ -217,8 +217,9 @@ function reservationRows(today: string): ReservationRow[] {
       applicant: "佐藤 太郎",
       createdText: "11/05 10:12",
       status: "pending",
-      blockedReason:
+      blockedReasons: [
         "時間割が未定のクラスがあるため、承認できません(未入力: 医療情報1年)。",
+      ],
     },
     {
       ...base,
@@ -571,6 +572,9 @@ export function sampleFor(
         menuId: "s10",
         element: (
           <TeacherHomeView
+            total={1}
+            page={1}
+            hasNext={false}
             rows={reservationRows(today).filter(
               (row) => row.status === "pending",
             )}
@@ -583,6 +587,8 @@ export function sampleFor(
         element: (
           <TeacherReservationsView
             rows={reservationRows(today)}
+            page={1}
+            hasNext={false}
             rooms={ROOMS}
             status={one(params.status) ?? ""}
             roomId={one(params.room) ?? ""}
@@ -602,6 +608,7 @@ export function sampleFor(
             rows={[
               {
                 id: "b1",
+                roomId: "r304",
                 room: "304",
                 rangeText: "11/20(金) 2限 〜 11/20(金) 4限",
                 setBy: "田村",

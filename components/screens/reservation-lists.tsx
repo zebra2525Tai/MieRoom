@@ -1,9 +1,10 @@
 import Form from "next/form";
 import type { ReactNode } from "react";
 import { AutoSubmitInput, AutoSubmitSelect } from "@/components/ui/auto-submit";
-import { Button, LinkButton } from "@/components/ui/button";
+import { LinkButton } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Pager } from "@/components/ui/pager";
+import { ReviewButtons } from "./review-buttons";
 import { WithdrawButton } from "./withdraw-button";
 import {
   Badge,
@@ -52,11 +53,11 @@ export type ReservationRow = {
   handledText: string | null;
   proxy: boolean;
   warnings: string[];
-  /** Why it cannot be approved. "承認" cannot be pressed while this is set. */
-  blockedReason: string | null;
+  /** Why it cannot be approved. "承認" cannot be pressed while there is any. */
+  blockedReasons: string[];
+  /** MC201: an approved reservation is on the same slots, so 承認 asks first. */
+  needsConfirm?: boolean;
 };
-
-const NOT_READY = "予約の表ができるまで、ここには何も出ません。";
 
 // Where a table does not fit, each reservation becomes a card instead: the state
 // and the buttons must be visible without scrolling sideways. The 6-column tables
@@ -112,30 +113,14 @@ function PurposeCell({ row }: { row: ReservationRow }) {
 }
 
 function ReviewActions({ row }: { row: ReservationRow }) {
-  if (row.status === "pending") {
-    return (
-      <div className="flex gap-2">
-        <Button
-          size="sm"
-          variant="primary"
-          disabled={row.blockedReason !== null}
-        >
-          承認
-        </Button>
-        <Button size="sm" variant="danger">
-          却下
-        </Button>
-      </div>
-    );
-  }
-  if (row.status === "approved") {
-    return (
-      <Button size="sm" variant="danger">
-        取消
-      </Button>
-    );
-  }
-  return null;
+  return (
+    <ReviewButtons
+      id={row.id}
+      status={row.status}
+      blocked={row.blockedReasons.length > 0}
+      needsConfirm={row.needsConfirm === true}
+    />
+  );
 }
 
 function ReviewNotes({ row }: { row: ReservationRow }) {
@@ -146,15 +131,17 @@ function ReviewNotes({ row }: { row: ReservationRow }) {
           {text}
         </span>
       ))}
-      {row.blockedReason && (
-        <span className="text-[11px] text-red-ink">{row.blockedReason}</span>
-      )}
+      {row.blockedReasons.map((text) => (
+        <span key={text} className="text-[11px] text-red-ink">
+          {text}
+        </span>
+      ))}
     </>
   );
 }
 
 function hasNotes(row: ReservationRow) {
-  return row.warnings.length > 0 || row.blockedReason !== null;
+  return row.warnings.length > 0 || row.blockedReasons.length > 0;
 }
 
 function CardField({
@@ -420,7 +407,20 @@ function ReviewTable({
 }
 
 // S10 先生ホーム(承認待ち)
-export function TeacherHomeView({ rows }: { rows: ReservationRow[] }) {
+export function TeacherHomeView({
+  rows,
+  total,
+  notice,
+  page,
+  hasNext,
+}: {
+  rows: ReservationRow[];
+  /** All the requests waiting, not only this page */
+  total: number;
+  notice?: string | null;
+  page: number;
+  hasNext: boolean;
+}) {
   return (
     <>
       <PageHeading
@@ -435,13 +435,21 @@ export function TeacherHomeView({ rows }: { rows: ReservationRow[] }) {
         }
       />
       <Callout icon="check">
-        承認待ち <strong className="font-semibold">{rows.length}</strong> 件。
+        承認待ち <strong className="font-semibold">{total}</strong> 件。
         却下の理由は、システムの外(チャットやメール)で伝えてください。
       </Callout>
+      {notice && (
+        <Callout icon="check" className="mb-5" key={notice}>
+          {notice}
+        </Callout>
+      )}
       {rows.length === 0 ? (
-        <EmptyState title="承認待ちの予約はありません">{NOT_READY}</EmptyState>
+        <EmptyState title="承認待ちの予約はありません" />
       ) : (
-        <ReviewTable rows={rows} showHandled={false} />
+        <>
+          <ReviewTable rows={rows} showHandled={false} />
+          <Pager basePath="/teacher" page={page} hasNext={hasNext} />
+        </>
       )}
     </>
   );
@@ -456,6 +464,10 @@ export function TeacherReservationsView({
   start,
   end,
   basePath = "/teacher/reservations",
+  notice,
+  page,
+  hasNext,
+  fromBlock = false,
 }: {
   rows: ReservationRow[];
   rooms: { id: string; name: string }[];
@@ -464,6 +476,11 @@ export function TeacherReservationsView({
   start: string;
   end: string;
   basePath?: string;
+  notice?: string | null;
+  page: number;
+  hasNext: boolean;
+  /** Opened from S13: only the approved reservations that touch the 使用止め. */
+  fromBlock?: boolean;
 }) {
   return (
     <>
@@ -519,10 +536,31 @@ export function TeacherReservationsView({
           </noscript>
         </Form>
       </FilterBar>
+      {fromBlock && (
+        <Callout kind="neutral" icon="info">
+          使用止めと重なる、承認済みの予約だけを出しています。
+          <LinkButton size="sm" href={basePath} className="ml-3">
+            すべて見る
+          </LinkButton>
+        </Callout>
+      )}
+      {notice && (
+        <Callout icon="check" className="mb-5" key={notice}>
+          {notice}
+        </Callout>
+      )}
       {rows.length === 0 ? (
-        <EmptyState title="表示する予約はありません">{NOT_READY}</EmptyState>
+        <EmptyState title="表示する予約はありません" />
       ) : (
-        <ReviewTable rows={rows} showHandled />
+        <>
+          <ReviewTable rows={rows} showHandled />
+          <Pager
+            basePath={basePath}
+            page={page}
+            hasNext={hasNext}
+            params={{ status, start, end, room: roomId }}
+          />
+        </>
       )}
     </>
   );

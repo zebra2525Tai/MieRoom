@@ -20,11 +20,14 @@ import { Brand } from "./brand";
 export function AppShell({
   role,
   todayText,
+  pendingCount = 0,
   sampleScreenId,
   children,
 }: {
   role: Role;
   todayText: string;
+  /** 先生: how many requests wait, shown on 「先生ホーム」 (5-2) */
+  pendingCount?: number;
   /** Only on the /_dev sample pages: which screen is open. The menu stays inside /_dev. */
   sampleScreenId?: string;
   children: ReactNode;
@@ -83,6 +86,15 @@ export function AppShell({
                   >
                     <Icon name={item.icon} />
                     <span>{item.label}</span>
+                    {item.id === "s10" && pendingCount > 0 && (
+                      <span
+                        role="status"
+                        aria-label={`承認待ち ${pendingCount}件`}
+                        className="ml-auto rounded-full bg-[#a3101f] px-2 py-0.5 text-[11px] font-bold leading-none text-white"
+                      >
+                        {pendingCount > 99 ? "99+" : pendingCount}
+                      </span>
+                    )}
                   </Link>
                 );
               })}

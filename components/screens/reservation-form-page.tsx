@@ -9,6 +9,8 @@ import {
 } from "@/lib/domain/school-date";
 import { listSchoolClosures } from "@/lib/server/queries/common";
 import { loadRoomRows } from "@/lib/server/queries/lessons";
+import { loadApprovalFacts } from "@/lib/server/queries/review";
+import { SLOTS } from "@/lib/domain/periods";
 import { one } from "@/lib/url";
 import { ReservationFormView } from "./reservation-form-view";
 
@@ -33,16 +35,37 @@ export async function ReservationFormPage({
     listSchoolClosures(addDays(date, -60), date),
   ]);
   const requestedRoom = one(params.room);
+  const roomId = rooms.find((room) => room.id === requestedRoom)?.id ?? null;
+  // MW203 (S12 only): for each slot, the homeroom classes that have a lesson without a room.
+  let homeroomNotes: Record<number, string[]> | undefined;
+  if (mode === "proxy" && roomId !== null) {
+    const facts = await loadApprovalFacts(
+      SLOTS.map((slot) => ({
+        key: String(slot.no),
+        roomId,
+        date,
+        slots: [slot.no],
+      })),
+      now,
+    );
+    homeroomNotes = Object.fromEntries(
+      SLOTS.map((slot) => [
+        slot.no,
+        facts.get(String(slot.no))?.homeroomClassesWithUndecidedLesson ?? [],
+      ]),
+    );
+  }
   return (
     <ReservationFormView
       mode={mode}
       rooms={rooms}
-      roomId={rooms.find((room) => room.id === requestedRoom)?.id ?? null}
+      roomId={roomId}
       date={date}
       today={today}
       periodNo={parsePeriodNo(one(params.period))}
       check={checkApplicationDate(date, now, closures)}
       basePath={basePath}
+      homeroomNotes={homeroomNotes}
     />
   );
 }
