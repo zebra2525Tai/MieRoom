@@ -12,12 +12,18 @@ import {
   PageHeading,
   SectionHead,
   Segmented,
+  SubText,
   Tabs,
   TableWrap,
   Td,
   Th,
 } from "@/components/ui/parts";
 import type { ExportIssue } from "@/lib/domain/master-export";
+import {
+  ReceiverAddForm,
+  ReceiverRemoveButton,
+  TagEditor,
+} from "./access-editors";
 import type { RoomKind } from "@/lib/domain/room-status";
 import { MESSAGES } from "@/lib/messages";
 import { withQuery } from "@/lib/url";
@@ -558,21 +564,36 @@ export function ExportView({
 export function AccessView({
   teachers,
   receivers,
+  rooms,
+  notice,
 }: {
-  teachers: { id: string; name: string; tagId: string | null }[];
+  teachers: {
+    id: string;
+    name: string;
+    tagId: string | null;
+    active: boolean;
+  }[];
   receivers: { id: string; receiverId: string; room: string }[];
+  rooms: { id: string; name: string }[];
+  /** MI501: what was just done */
+  notice?: string | null;
 }) {
   return (
     <>
       <PageHeading
         title="タグ・受信機"
-        description="講師のタグIDと、教室の受信機IDを管理します。時間割管理者は、環境変数で決めます。"
+        description="講師のタグIDと、教室の受信機IDを登録します。時間割管理者は、環境変数で決めます。"
       />
-      <Callout kind="neutral">{READ_ONLY_NOTE}</Callout>
+      {notice && (
+        <Callout icon="check" className="mb-5" key={notice}>
+          {notice}
+        </Callout>
+      )}
       <SectionHead
         title="受信機"
-        description="1つの受信機は1つの教室。1つの教室に複数置けます。"
+        description="ゲートウェイが送る教室ID(roomId)を、教室に登録します。1つの受信機は1つの教室。1つの教室に複数置けます。登録のないIDは、位置に反映されません。"
       />
+      <ReceiverAddForm rooms={rooms} />
       {receivers.length === 0 ? (
         <EmptyState title="受信機は登録されていません" />
       ) : (
@@ -581,6 +602,7 @@ export function AccessView({
             <tr>
               <Th>受信機ID</Th>
               <Th>教室</Th>
+              <Th>操作</Th>
             </tr>
           </thead>
           <tbody>
@@ -590,6 +612,9 @@ export function AccessView({
                   <strong>{row.receiverId}</strong>
                 </Td>
                 <Td>{row.room}</Td>
+                <Td>
+                  <ReceiverRemoveButton id={row.id} />
+                </Td>
               </tr>
             ))}
           </tbody>
@@ -597,7 +622,7 @@ export function AccessView({
       )}
       <SectionHead
         title="タグ"
-        description="タグが登録されていない講師は「位置情報なし」と出ます。"
+        description="ビーコンの minor(0〜65535の数字)を登録します。登録のない講師は「位置情報なし」と出ます。変えたり外したりすると、その講師のいまの位置は消えます。"
       />
       <TableWrap>
         <thead>
@@ -611,8 +636,15 @@ export function AccessView({
             <tr key={row.id}>
               <Td>
                 <strong>{row.name}</strong>
+                {!row.active && <SubText>無効</SubText>}
               </Td>
-              <Td>{row.tagId ?? <span className="text-muted">—</span>}</Td>
+              <Td>
+                {row.active ? (
+                  <TagEditor teacherId={row.id} tagId={row.tagId} />
+                ) : (
+                  (row.tagId ?? <span className="text-muted">—</span>)
+                )}
+              </Td>
             </tr>
           ))}
         </tbody>

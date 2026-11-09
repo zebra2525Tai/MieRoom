@@ -11,6 +11,7 @@ const NOTICES: Record<string, string> = {
   MI204: MESSAGES.MI204,
   MI301: MESSAGES.MI301,
   MI302: MESSAGES.MI302,
+  MI501: MESSAGES.MI501,
 };
 
 export function noticeText(id: string | undefined): string | null {

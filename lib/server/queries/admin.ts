@@ -288,9 +288,10 @@ export async function loadImportRows(
 export async function loadAccess() {
   const db = getDb();
   const [teachers, receivers] = await Promise.all([
+    // Every active teacher, and an inactive one that still holds a tag (it blocks the number).
     db.teacher.findMany({
-      where: { active: true },
-      select: { id: true, displayName: true, tagId: true },
+      where: { OR: [{ active: true }, { tagId: { not: null } }] },
+      select: { id: true, displayName: true, tagId: true, active: true },
       orderBy: { displayName: "asc" },
     }),
     db.receiver.findMany({
@@ -307,6 +308,7 @@ export async function loadAccess() {
       id: row.id,
       name: row.displayName,
       tagId: row.tagId,
+      active: row.active,
     })),
     receivers: receivers.map((row) => ({
       id: row.id,

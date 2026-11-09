@@ -815,8 +815,10 @@ export function sampleFor(
             receivers={[{ id: "1", receiverId: "304", room: "304" }]}
             teachers={TEACHERS.map((item, index) => ({
               ...item,
-              tagId: index === 5 ? "7777772E-…-636F6D000001:1:12" : null,
+              tagId: index === 5 ? "12" : null,
+              active: true,
             }))}
+            rooms={ROOMS.map((room) => ({ id: room.id, name: room.name }))}
           />
         ),
       };
