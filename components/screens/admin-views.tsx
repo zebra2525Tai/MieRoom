@@ -24,6 +24,7 @@ import {
   LinkRemoveButton,
   type LinkChoices,
 } from "./link-editor";
+import { ClosureDeleteButton, ClosureEditButton } from "./closure-editor";
 import { MasterActiveButton, MasterEditButton } from "./master-editor";
 import {
   ReceiverAddForm,
@@ -35,10 +36,7 @@ import { MESSAGES } from "@/lib/messages";
 import { withQuery } from "@/lib/url";
 import { KIND_LABEL } from "./rooms-view";
 
-// 時間割管理者の画面 (外部設計書 06-3). Looks only.
-
-const READ_ONLY_NOTE =
-  "一覧は実際のデータです。追加・編集は、これから作ります。";
+// 時間割管理者の画面 (外部設計書 06-3).
 
 function ActiveBadge({ active }: { active: boolean }) {
   return (
@@ -541,6 +539,12 @@ export function LinksView({
 
 export type ClosureRow = {
   id: string;
+  /** Made in the system: can be changed and deleted. The rows of the tool cannot. */
+  editable: boolean;
+  startDate: string;
+  endDate: string | null;
+  classId: string | null;
+  version: string;
   startText: string;
   endText: string;
   name: string;
@@ -554,26 +558,45 @@ export function ClosuresView({
   years,
   rows,
   hasSchoolClosure,
+  classes,
   basePath = "/admin/closures",
+  notice,
+  fixCount = 0,
 }: {
   year: number;
   years: number[];
   rows: ClosureRow[];
   hasSchoolClosure: boolean;
+  /** The classes of this school year, for 対象クラス */
+  classes: { id: string; name: string }[];
   basePath?: string;
+  /** MI501: what was just done */
+  notice?: string | null;
+  /** MW502: how many things the CSV export check wants fixed */
+  fixCount?: number;
 }) {
   return (
     <>
       <PageHeading
         title="休み・行事"
-        description="祝日・休校・行事を管理します。"
+        description="祝日・休校・行事を管理します。ツールの取り込みで入った行は、表示だけです。"
         actions={
-          <Button variant="primary" disabled>
+          <ClosureEditButton row={null} classes={classes} variant="primary">
             <Icon name="plus" size={16} />
             追加
-          </Button>
+          </ClosureEditButton>
         }
       />
+      {notice && (
+        <Callout icon="check" className="mb-3" key={notice}>
+          {notice}
+        </Callout>
+      )}
+      {fixCount > 0 && (
+        <Callout kind="warning" icon="info" className="mb-3">
+          {MESSAGES.MW502(fixCount)}
+        </Callout>
+      )}
       <Callout kind="warning">
         全校の休み・行事の日は、営業日から外れます(行事の日も含みます。予約の締め切りに使います)。
       </Callout>
@@ -599,7 +622,7 @@ export function ClosuresView({
           </noscript>
         </Form>
         <span className="text-[11px] text-muted sm:ml-auto">
-          {rows.length}件 / {READ_ONLY_NOTE}
+          {rows.length}件
         </span>
       </FilterBar>
       {rows.length === 0 ? (
@@ -613,6 +636,7 @@ export function ClosuresView({
               <Th>名称</Th>
               <Th>対象クラス</Th>
               <Th>出どころ</Th>
+              <Th>操作</Th>
             </tr>
           </thead>
           <tbody>
@@ -625,6 +649,18 @@ export function ClosuresView({
                 </Td>
                 <Td>{row.target}</Td>
                 <Td>{row.source}</Td>
+                <Td>
+                  {row.editable ? (
+                    <div className="flex flex-wrap gap-2">
+                      <ClosureEditButton row={row} classes={classes}>
+                        編集
+                      </ClosureEditButton>
+                      <ClosureDeleteButton id={row.id} name={row.name} />
+                    </div>
+                  ) : (
+                    <span className="text-muted">—</span>
+                  )}
+                </Td>
               </tr>
             ))}
           </tbody>

@@ -195,6 +195,7 @@ export async function loadClosuresOfYear(
       classId: true,
       source: true,
       targetMonth: true,
+      updatedAt: true,
       class: { select: { name: true } },
     },
     orderBy: [{ startDate: "asc" }, { name: "asc" }],
@@ -203,6 +204,12 @@ export async function loadClosuresOfYear(
     hasSchoolClosure: rows.some((row) => row.classId === null),
     rows: rows.map((row) => ({
       id: row.id,
+      // Only the rows made in the system can be changed (the others come from the tool).
+      editable: row.source === "SYSTEM",
+      startDate: dateColumnToText(row.startDate),
+      endDate: row.endDate ? dateColumnToText(row.endDate) : null,
+      classId: row.classId,
+      version: row.updatedAt.toISOString(),
       startText: formatDate(dateColumnToText(row.startDate), today),
       endText: row.endDate
         ? formatDate(dateColumnToText(row.endDate), today)

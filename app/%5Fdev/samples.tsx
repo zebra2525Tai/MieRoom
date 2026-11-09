@@ -799,10 +799,16 @@ export function sampleFor(
             year={year}
             years={[year - 1, year, year + 1]}
             hasSchoolClosure
+            classes={CLASSES}
             basePath={base}
             rows={[
               {
                 id: "1",
+                editable: true,
+                startDate: "2026-11-03",
+                endDate: null,
+                classId: null,
+                version: "2026-11-01T00:00:00.000Z",
                 startText: "11/3(火)",
                 endText: "—",
                 name: "文化の日",
@@ -811,6 +817,11 @@ export function sampleFor(
               },
               {
                 id: "2",
+                editable: true,
+                startDate: "2026-11-12",
+                endDate: "2026-11-13",
+                classId: null,
+                version: "2026-11-01T00:00:00.000Z",
                 startText: "11/12(木)",
                 endText: "11/13(金)",
                 name: "学園祭",
@@ -819,6 +830,11 @@ export function sampleFor(
               },
               {
                 id: "3",
+                editable: false,
+                startDate: "2026-11-20",
+                endDate: null,
+                classId: null,
+                version: "2026-11-01T00:00:00.000Z",
                 startText: "11/20(金)",
                 endText: "—",
                 name: "校外学習",
