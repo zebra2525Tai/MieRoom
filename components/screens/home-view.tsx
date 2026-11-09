@@ -4,7 +4,8 @@ import {
   type ClassOption,
 } from "@/components/shell/my-class-select";
 import { LinkButton } from "@/components/ui/button";
-import { Icon } from "@/components/ui/icon";
+import { SearchField } from "@/components/ui/form";
+import { Icon, type IconName } from "@/components/ui/icon";
 import { Badge, Callout, Card } from "@/components/ui/parts";
 import { formatDate } from "@/lib/domain/school-date";
 import { MESSAGES } from "@/lib/messages";
@@ -35,12 +36,11 @@ function NextLessonCard({
   timetableHref: string;
 }) {
   const next = lessons.kind === "ready" ? lessons.next : null;
+  // Card's look with its own tint and border (not Card + className: overriding
+  // Card's bg-white and border color would depend on the CSS order).
   return (
-    <Card className="border-[#cfd7ff] bg-linear-to-r from-[#f2f5ff] to-[#f2f5ff] p-6 sm:px-7">
-      <div className="flex items-center gap-2 text-[11px] font-bold tracking-wide text-brand">
-        <Icon name="calendar" size={15} />
-        次の授業
-      </div>
+    <div className="rounded-card border border-[#cfd7ff] bg-[#f2f5ff] p-6 shadow-card">
+      <CardLabel icon="calendar">次の授業</CardLabel>
       {!selected ? (
         <h2 className="mb-6 mt-5 text-[19px] font-bold">
           クラスを選ぶと、次の授業が出ます
@@ -84,7 +84,17 @@ function NextLessonCard({
         </LinkButton>
         <LinkButton href="/rooms">空き教室を見る</LinkButton>
       </div>
-    </Card>
+    </div>
+  );
+}
+
+/** The small blue label at the top of the two upper cards. */
+function CardLabel({ icon, children }: { icon: IconName; children: string }) {
+  return (
+    <div className="flex items-center gap-2 text-[11px] font-bold tracking-[0.12em] text-brand">
+      <Icon name={icon} size={15} />
+      {children}
+    </div>
   );
 }
 
@@ -110,14 +120,19 @@ export function HomeView({
   return (
     <>
       <h1 className="sr-only">ホーム</h1>
-      <div className="mb-6 flex flex-wrap items-center justify-end gap-2">
+      {/* Phones: the class picker and 予約する each take a full row. From sm: one row, right-aligned. */}
+      <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
         <MyClassSelect
           classes={classes}
           selectedId={selectedClassId}
           todayFiscalYear={todayFiscalYear}
           emptyLabel="選んでください"
         />
-        <LinkButton variant="primary" href="/reservations/new">
+        <LinkButton
+          variant="primary"
+          href="/reservations/new"
+          className="w-full sm:w-auto"
+        >
           <Icon name="plus" size={16} />
           予約する
         </LinkButton>
@@ -138,29 +153,22 @@ export function HomeView({
             date: today,
           })}
         />
-        <Card className="flex flex-col justify-center p-6">
-          <div className="text-[11px] font-bold tracking-[0.12em] text-brand">
-            先生の位置
-          </div>
+        <Card className="flex flex-col p-6">
+          <CardLabel icon="pin">先生の位置</CardLabel>
           <h2 className="mt-2 text-[17px] font-bold">先生は、どこにいる?</h2>
           <p className="mb-4 mt-1.5 text-xs text-muted">
             質問・相談の前に、居場所を確認できます。
           </p>
-          <Form action="/teachers" className="relative">
-            <Icon
-              name="search"
-              size={17}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-[#586579]"
-            />
-            <input
+          <Form action="/teachers">
+            <SearchField
               name="q"
               aria-label="探したい先生の名前"
               placeholder="先生の名前で探す"
-              className="h-[42px] w-full rounded-lg border border-line bg-[#f6f8fc] pl-9 pr-3 text-xs"
             />
           </Form>
-          <div className="mt-3">
-            <LinkButton variant="subtle" size="sm" href="/teachers">
+          {/* -ml-3.5 lines the label up with the text above (subtle has no border to show). */}
+          <div className="mt-2">
+            <LinkButton variant="subtle" href="/teachers" className="-ml-3.5">
               先生一覧へ
               <Icon name="arrow" size={14} />
             </LinkButton>
@@ -168,9 +176,10 @@ export function HomeView({
         </Card>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-2">
+      {/* Same column edges as the row above from lg; side by side from md. */}
+      <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-[minmax(0,1.6fr)_minmax(280px,1fr)]">
         <Card className="p-6">
-          <h2 className="text-base font-bold">いまの授業</h2>
+          <h2 className="text-[17px] font-bold">いまの授業</h2>
           {!selectedClassId ? (
             <p className="mt-2 text-xs text-muted">{MESSAGES.MI001}</p>
           ) : lessons.kind === "undecided" ? (
@@ -194,7 +203,7 @@ export function HomeView({
           )}
         </Card>
         <Card className="p-6">
-          <h2 className="text-base font-bold">今日の休み・行事</h2>
+          <h2 className="text-[17px] font-bold">今日の休み・行事</h2>
           {closures.length === 0 ? (
             <p className="mt-2 text-xs text-muted">ありません</p>
           ) : (

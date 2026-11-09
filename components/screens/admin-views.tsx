@@ -1,21 +1,23 @@
 import Form from "next/form";
-import Link from "next/link";
 import { AutoSubmitSelect } from "@/components/ui/auto-submit";
-import { Button } from "@/components/ui/button";
+import { Button, LinkButton } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import {
   Badge,
   Callout,
+  Card,
   EmptyState,
   FilterBar,
   NotReadyNotice,
   PageHeading,
   SectionHead,
   Segmented,
+  SubText,
   Tabs,
   TableWrap,
   Td,
   Th,
+  monoTextClass,
 } from "@/components/ui/parts";
 import type { ExportIssue } from "@/lib/domain/master-export";
 import type { RoomKind } from "@/lib/domain/room-status";
@@ -27,6 +29,19 @@ import { KIND_LABEL } from "./rooms-view";
 
 const READ_ONLY_NOTE =
   "一覧は実際のデータです。追加・編集は、これから作ります。";
+
+// Fixed widths for the short columns of S21 (from lg, where every column fits), so that
+// 状態 and the other short columns stay in the same place when the tab changes. The
+// name and note columns take the rest. Below lg the table keeps its natural widths and
+// scrolls sideways (with the edge shadow of TableWrap). Not from md: at 768 the クラス and
+// 教室 tables are wider than the box, so the fixed widths cannot hold there and 状態
+// would move further between tabs than with natural widths.
+const COL = {
+  status: "lg:w-24",
+  year: "lg:w-28",
+  short: "lg:w-28",
+  id: "lg:w-32",
+} as const;
 
 function ActiveBadge({ active }: { active: boolean }) {
   return (
@@ -105,6 +120,7 @@ export function MastersView({
           </Button>
         }
       />
+      <Callout kind="neutral">{READ_ONLY_NOTE}</Callout>
       <Tabs
         label="マスタの種類"
         items={MASTER_TABS.map((item) => ({
@@ -125,12 +141,12 @@ export function MastersView({
             },
           ]}
         />
-        <span className="text-[11px] text-muted sm:ml-auto">
-          {data.rows.length}件 / {READ_ONLY_NOTE}
+        <span className="ml-auto whitespace-nowrap text-[11px] text-muted tabular-nums">
+          {data.rows.length}件
         </span>
       </FilterBar>
       {data.rows.length === 0 ? (
-        <EmptyState title="登録がありません" />
+        <EmptyState icon="info" title="登録がありません" />
       ) : (
         <TableWrap>
           {data.tab === "classes" && (
@@ -139,9 +155,13 @@ export function MastersView({
                 <tr>
                   <Th>クラス名</Th>
                   <Th>ホームルーム教室</Th>
-                  <Th>開始年度</Th>
-                  <Th>終了年度</Th>
-                  <Th>状態</Th>
+                  <Th numeric className={COL.year}>
+                    開始年度
+                  </Th>
+                  <Th numeric className={COL.year}>
+                    終了年度
+                  </Th>
+                  <Th className={COL.status}>状態</Th>
                 </tr>
               </thead>
               <tbody>
@@ -151,8 +171,8 @@ export function MastersView({
                       <strong>{row.name}</strong>
                     </Td>
                     <Td>{row.homeRoom}</Td>
-                    <Td>{row.startYear}</Td>
-                    <Td>{row.endYear ?? "(続く)"}</Td>
+                    <Td numeric>{row.startYear}</Td>
+                    <Td numeric>{row.endYear ?? "(続く)"}</Td>
                     <Td>
                       <ActiveBadge active={row.active} />
                     </Td>
@@ -168,7 +188,7 @@ export function MastersView({
                   <Th>時間割での表記</Th>
                   <Th>メール</Th>
                   <Th>タグID</Th>
-                  <Th>状態</Th>
+                  <Th className={COL.status}>状態</Th>
                 </tr>
               </thead>
               <tbody>
@@ -178,7 +198,13 @@ export function MastersView({
                       <strong>{row.name}</strong>
                     </Td>
                     <Td>{row.email ?? "—"}</Td>
-                    <Td>{row.tagId ?? "—"}</Td>
+                    <Td>
+                      {row.tagId === null ? (
+                        "—"
+                      ) : (
+                        <span className={monoTextClass}>{row.tagId}</span>
+                      )}
+                    </Td>
                     <Td>
                       <ActiveBadge active={row.active} />
                     </Td>
@@ -192,7 +218,7 @@ export function MastersView({
               <thead>
                 <tr>
                   <Th>教科名</Th>
-                  <Th>状態</Th>
+                  <Th className={COL.status}>状態</Th>
                 </tr>
               </thead>
               <tbody>
@@ -214,11 +240,11 @@ export function MastersView({
               <thead>
                 <tr>
                   <Th>教室名</Th>
-                  <Th>棟・階</Th>
-                  <Th>分類</Th>
+                  <Th className={COL.short}>棟・階</Th>
+                  <Th className={COL.short}>分類</Th>
                   <Th>備考</Th>
-                  <Th>受信機ID</Th>
-                  <Th>状態</Th>
+                  <Th className={COL.id}>受信機ID</Th>
+                  <Th className={COL.status}>状態</Th>
                 </tr>
               </thead>
               <tbody>
@@ -229,8 +255,20 @@ export function MastersView({
                     </Td>
                     <Td>{row.building ?? "—"}</Td>
                     <Td>{KIND_LABEL[row.kind]}</Td>
-                    <Td>{row.note ?? "—"}</Td>
-                    <Td>{row.receivers.join("、") || "—"}</Td>
+                    {/* min-w-28 below lg keeps the six columns inside a 512px box (tablet
+                        with the sidebar). */}
+                    <Td className="min-w-28 whitespace-normal lg:min-w-40">
+                      {row.note ?? "—"}
+                    </Td>
+                    <Td>
+                      {row.receivers.length === 0 ? (
+                        "—"
+                      ) : (
+                        <span className={monoTextClass}>
+                          {row.receivers.join("、")}
+                        </span>
+                      )}
+                    </Td>
                     <Td>
                       <ActiveBadge active={row.active} />
                     </Td>
@@ -280,6 +318,7 @@ export function LinksView({
           </Button>
         }
       />
+      <Callout kind="neutral">{READ_ONLY_NOTE}</Callout>
       <Tabs
         label="紐づけの種類"
         items={LINK_TABS.map((item) => ({
@@ -288,63 +327,66 @@ export function LinksView({
           active: tab === item.tab,
         }))}
       />
-      <FilterBar>
-        <Form action={basePath} className="flex items-center gap-2.5">
-          <input type="hidden" name="tab" value={tab} />
-          <AutoSubmitSelect
-            key={classId ?? "none"}
-            name="class"
-            defaultValue={classId ?? ""}
-            aria-label="クラス"
-          >
-            {classes.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name}
-              </option>
-            ))}
-          </AutoSubmitSelect>
-          <noscript>
-            <button type="submit">表示</button>
-          </noscript>
-        </Form>
-        <span className="text-[11px] text-muted sm:ml-auto">
-          {rows.length}件 / {READ_ONLY_NOTE}
-        </span>
-      </FilterBar>
-      {rows.length === 0 ? (
-        <EmptyState title="登録がありません" />
-      ) : (
-        <TableWrap>
-          <thead>
-            <tr>
-              <Th>教科</Th>
-              {tab !== "subjects" && (
-                <Th>{tab === "teachers" ? "講師" : "教室"}</Th>
-              )}
-              {tab === "subjects" && <Th>確認</Th>}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => (
-              <tr key={row.key}>
-                <Td>
-                  <strong>{row.subject}</strong>
-                </Td>
-                {tab !== "subjects" && <Td>{row.value}</Td>}
-                {tab === "subjects" && (
-                  <Td>
-                    {row.missing ? (
-                      <Badge kind="error">講師の行がありません</Badge>
-                    ) : (
-                      <span className="text-muted">—</span>
-                    )}
-                  </Td>
+      {/* The bar, its count and the table share one right edge (max-w-3xl). */}
+      <div className="max-w-3xl">
+        <FilterBar>
+          <Form action={basePath} className="flex items-center gap-2.5">
+            <input type="hidden" name="tab" value={tab} />
+            <AutoSubmitSelect
+              key={classId ?? "none"}
+              name="class"
+              defaultValue={classId ?? ""}
+              aria-label="クラス"
+            >
+              {classes.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </AutoSubmitSelect>
+            <noscript>
+              <button type="submit">表示</button>
+            </noscript>
+          </Form>
+          <span className="ml-auto whitespace-nowrap text-[11px] text-muted tabular-nums">
+            {rows.length}件
+          </span>
+        </FilterBar>
+        {rows.length === 0 ? (
+          <EmptyState icon="info" title="登録がありません" />
+        ) : (
+          <TableWrap>
+            <thead>
+              <tr>
+                <Th className="w-[45%]">教科</Th>
+                {tab !== "subjects" && (
+                  <Th>{tab === "teachers" ? "講師" : "教室"}</Th>
                 )}
+                {tab === "subjects" && <Th>確認</Th>}
               </tr>
-            ))}
-          </tbody>
-        </TableWrap>
-      )}
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={row.key}>
+                  <Td>
+                    <strong>{row.subject}</strong>
+                  </Td>
+                  {tab !== "subjects" && <Td>{row.value}</Td>}
+                  {tab === "subjects" && (
+                    <Td>
+                      {row.missing ? (
+                        <Badge kind="error">講師の行がありません</Badge>
+                      ) : (
+                        <span className="text-muted">—</span>
+                      )}
+                    </Td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </TableWrap>
+        )}
+      </div>
     </>
   );
 }
@@ -384,62 +426,79 @@ export function ClosuresView({
           </Button>
         }
       />
+      <Callout kind="neutral">{READ_ONLY_NOTE}</Callout>
       <Callout kind="warning">
         全校の休み・行事の日は、営業日から外れます(行事の日も含みます。予約の締め切りに使います)。
       </Callout>
       {!hasSchoolClosure && (
         <Callout kind="warning">{MESSAGES.MW504(year)}</Callout>
       )}
-      <FilterBar>
-        <Form action={basePath} className="flex items-center gap-2.5">
-          <AutoSubmitSelect
-            key={year}
-            name="year"
-            defaultValue={year}
-            aria-label="年度"
-          >
-            {years.map((item) => (
-              <option key={item} value={item}>
-                {item}年度
-              </option>
-            ))}
-          </AutoSubmitSelect>
-          <noscript>
-            <button type="submit">表示</button>
-          </noscript>
-        </Form>
-        <span className="text-[11px] text-muted sm:ml-auto">
-          {rows.length}件 / {READ_ONLY_NOTE}
-        </span>
-      </FilterBar>
-      {rows.length === 0 ? (
-        <EmptyState title="この年度の休み・行事はありません" />
-      ) : (
-        <TableWrap>
-          <thead>
-            <tr>
-              <Th>開始日</Th>
-              <Th>終了日</Th>
-              <Th>名称</Th>
-              <Th>対象クラス</Th>
-              <Th>出どころ</Th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => (
-              <tr key={row.id}>
-                <Td>{row.startText}</Td>
-                <Td>{row.endText}</Td>
-                <Td>
-                  <strong>{row.name}</strong>
-                </Td>
-                <Td>{row.target}</Td>
-                <Td>{row.source}</Td>
+      {/* The bar, its count and the table take the full width, the same as the
+          callouts above, so every right edge lines up. A cap such as max-w-5xl left
+          them just short of the callouts on a laptop (48px at 1366), which looked
+          like a mistake. */}
+      <div>
+        <FilterBar>
+          <Form action={basePath} className="flex items-center gap-2.5">
+            <AutoSubmitSelect
+              key={year}
+              name="year"
+              defaultValue={year}
+              aria-label="年度"
+            >
+              {years.map((item) => (
+                <option key={item} value={item}>
+                  {item}年度
+                </option>
+              ))}
+            </AutoSubmitSelect>
+            <noscript>
+              <button type="submit">表示</button>
+            </noscript>
+          </Form>
+          <span className="ml-auto whitespace-nowrap text-[11px] text-muted tabular-nums">
+            {rows.length}件
+          </span>
+        </FilterBar>
+        {rows.length === 0 ? (
+          <EmptyState icon="info" title="この年度の休み・行事はありません" />
+        ) : (
+          <TableWrap>
+            <thead>
+              <tr>
+                <Th>期間</Th>
+                <Th>名称</Th>
+                <Th>対象クラス</Th>
+                <Th>出どころ</Th>
               </tr>
-            ))}
-          </tbody>
-        </TableWrap>
-      )}
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={row.id}>
+                  {/* One line when there is room; otherwise the end date moves to a
+                      second line together with its 〜 (never a 〜 alone at a line end). */}
+                  <Td className="whitespace-normal">
+                    <span className="whitespace-nowrap">{row.startText}</span>
+                    {row.endText !== "—" && (
+                      <>
+                        <wbr />
+                        <span className="whitespace-nowrap">
+                          〜{row.endText}
+                        </span>
+                      </>
+                    )}
+                  </Td>
+                  <Td className="min-w-28 whitespace-normal">
+                    <strong>{row.name}</strong>
+                  </Td>
+                  <Td className="min-w-32 whitespace-normal">{row.target}</Td>
+                  <Td className="min-w-36 whitespace-normal">{row.source}</Td>
+                </tr>
+              ))}
+            </tbody>
+          </TableWrap>
+        )}
+      </div>
     </>
   );
 }
@@ -470,79 +529,92 @@ export function ExportView({
       {errorCount > 0 ? (
         <Callout kind="error">{MESSAGES.ME510(errorCount)}</Callout>
       ) : (
-        <Callout kind="info">
+        <Callout kind="success" icon="check">
           書き出し前の確認: 直す必要があるものはありません。
         </Callout>
       )}
       {issues.length > 0 && (
-        <div className="mb-6">
-          <TableWrap>
-            <thead>
-              <tr>
-                <Th>区分</Th>
-                <Th>確認</Th>
-                <Th>内容</Th>
-                <Th>対象</Th>
-                <Th>直す画面</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {issues.map((issue, index) => (
-                <tr key={index}>
-                  <Td>
-                    <Badge kind={issue.level === "error" ? "error" : "warning"}>
-                      {issue.level === "error" ? "エラー" : "警告"}
-                    </Badge>
-                  </Td>
-                  <Td>
-                    {issue.check === null ? "—" : `R5-6 の${issue.check}`}
-                  </Td>
-                  <Td className="min-w-[280px] whitespace-normal">
-                    {issue.message}
-                  </Td>
-                  <Td className="whitespace-normal">{issue.target}</Td>
-                  <Td>
-                    {issue.fixPath !== "" && (
-                      <Link
-                        href={issue.fixPath}
-                        className="font-semibold text-brand-dark underline"
-                      >
-                        直す
-                      </Link>
+        <div className="mb-5">
+          {/* Below lg: one card per issue, so that 対象 and 直す are not squeezed or
+              scrolled away. From lg: the table. */}
+          <ul className="grid gap-3 lg:hidden">
+            {issues.map((issue, index) => (
+              <li key={index}>
+                <Card className="flex flex-col gap-2 p-4 text-xs">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <IssueLevel issue={issue} />
+                    {issue.check !== null && (
+                      <span className="text-[11px] text-muted">
+                        R5-6 の{issue.check}
+                      </span>
                     )}
-                  </Td>
+                  </div>
+                  <p>{issue.message}</p>
+                  {/* 対象 and 直す share a row (a footer under a line): no row holds
+                      only the button. */}
+                  <div className="mt-0.5 flex items-center justify-between gap-3 border-t border-line pt-2.5">
+                    <dl className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] gap-x-4">
+                      <dt className="text-muted">対象</dt>
+                      <dd className="min-w-0">{issue.target}</dd>
+                    </dl>
+                    {issue.fixPath !== "" && (
+                      <IssueFixLink href={issue.fixPath} size="md" />
+                    )}
+                  </div>
+                </Card>
+              </li>
+            ))}
+          </ul>
+          <div className="hidden lg:block">
+            <TableWrap>
+              <thead>
+                <tr>
+                  <Th>区分・確認</Th>
+                  <Th>内容</Th>
+                  <Th>対象</Th>
+                  <Th>直す画面</Th>
                 </tr>
-              ))}
-            </tbody>
-          </TableWrap>
+              </thead>
+              <tbody>
+                {issues.map((issue, index) => (
+                  <tr key={index}>
+                    <Td>
+                      <IssueLevel issue={issue} />
+                      {issue.check !== null && (
+                        <SubText>R5-6 の{issue.check}</SubText>
+                      )}
+                    </Td>
+                    <Td className="min-w-64 whitespace-normal">
+                      {issue.message}
+                    </Td>
+                    <Td className="min-w-40 whitespace-normal">
+                      {issue.target}
+                    </Td>
+                    <Td>
+                      {issue.fixPath !== "" && (
+                        <IssueFixLink href={issue.fixPath} size="sm" />
+                      )}
+                    </Td>
+                  </tr>
+                ))}
+              </tbody>
+            </TableWrap>
+          </div>
         </div>
       )}
-      <SectionHead
-        title="書き出すファイル"
-        description="エラーがなければ、この8つがZIPに入ります。"
-      />
-      <TableWrap>
-        <thead>
-          <tr>
-            <Th>ファイル</Th>
-            <Th>行数</Th>
-          </tr>
-        </thead>
-        <tbody>
-          {files.map((file) => (
-            <tr key={file.name}>
-              <Td>{file.name}</Td>
-              <Td>{file.rows}</Td>
-            </tr>
-          ))}
-        </tbody>
-      </TableWrap>
+      {/* The page's only action comes before the file list, so that it is in view on a
+          laptop screen. */}
       <form
         method="post"
         action="/admin/export/download"
-        className="mt-5 flex flex-wrap items-center gap-3"
+        className="flex flex-col items-stretch gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3"
       >
-        <Button type="submit" variant="primary" disabled={errorCount > 0}>
+        <Button
+          type="submit"
+          variant="primary"
+          disabled={errorCount > 0}
+          className="w-full sm:w-auto"
+        >
           <Icon name="download" size={16} />
           8つのCSVを書き出す
         </Button>
@@ -550,7 +622,46 @@ export function ExportView({
           書き出したら、全担任に配ってください。
         </span>
       </form>
+      <SectionHead
+        title="書き出すファイル"
+        description="エラーがなければ、この8つがZIPに入ります。"
+      />
+      <TableWrap className="max-w-3xl">
+        <thead>
+          <tr>
+            <Th>ファイル</Th>
+            <Th numeric className="w-24">
+              行数
+            </Th>
+          </tr>
+        </thead>
+        <tbody>
+          {files.map((file) => (
+            <tr key={file.name}>
+              <Td>{file.name}</Td>
+              <Td numeric>{file.rows}</Td>
+            </tr>
+          ))}
+        </tbody>
+      </TableWrap>
     </>
+  );
+}
+
+function IssueLevel({ issue }: { issue: ExportIssue }) {
+  return (
+    <Badge kind={issue.level === "error" ? "error" : "warning"}>
+      {issue.level === "error" ? "エラー" : "警告"}
+    </Badge>
+  );
+}
+
+/** sm in the lg table, md (full touch size) in the cards below lg. */
+function IssueFixLink({ href, size }: { href: string; size: "sm" | "md" }) {
+  return (
+    <LinkButton size={size} href={href} className="shrink-0">
+      直す
+    </LinkButton>
   );
 }
 
@@ -574,20 +685,20 @@ export function AccessView({
         description="1つの受信機は1つの教室。1つの教室に複数置けます。"
       />
       {receivers.length === 0 ? (
-        <EmptyState title="受信機は登録されていません" />
+        <EmptyState icon="info" title="受信機は登録されていません" />
       ) : (
-        <TableWrap>
+        <TableWrap className="max-w-3xl">
           <thead>
             <tr>
-              <Th>受信機ID</Th>
+              <Th className="w-1/3">受信機ID</Th>
               <Th>教室</Th>
             </tr>
           </thead>
           <tbody>
             {receivers.map((row) => (
               <tr key={row.id}>
-                <Td>
-                  <strong>{row.receiverId}</strong>
+                <Td className="whitespace-normal">
+                  <strong className={monoTextClass}>{row.receiverId}</strong>
                 </Td>
                 <Td>{row.room}</Td>
               </tr>
@@ -599,10 +710,10 @@ export function AccessView({
         title="タグ"
         description="タグが登録されていない講師は「位置情報なし」と出ます。"
       />
-      <TableWrap>
+      <TableWrap className="max-w-3xl">
         <thead>
           <tr>
-            <Th>講師</Th>
+            <Th className="w-1/3">講師</Th>
             <Th>タグID</Th>
           </tr>
         </thead>
@@ -612,7 +723,13 @@ export function AccessView({
               <Td>
                 <strong>{row.name}</strong>
               </Td>
-              <Td>{row.tagId ?? <span className="text-muted">—</span>}</Td>
+              <Td className="whitespace-normal">
+                {row.tagId === null ? (
+                  <span className="text-muted">—</span>
+                ) : (
+                  <span className={monoTextClass}>{row.tagId}</span>
+                )}
+              </Td>
             </tr>
           ))}
         </tbody>
@@ -632,7 +749,7 @@ export function DeleteView() {
       <NotReadyNotice>
         画面の形を確かめる段階です。削除の判定は、授業・予約の表ができてから作ります。
       </NotReadyNotice>
-      <EmptyState title="削除できるものを、ここに出します">
+      <EmptyState icon="trash" title="削除できるものを、ここに出します">
         名前、削除できるか、使われている理由、削除したときの影響を一覧にします。
       </EmptyState>
     </>
@@ -656,7 +773,7 @@ export function MonitorsView() {
       <NotReadyNotice>
         画面の形を確かめる段階です。モニターの表ができてから、追加できるようになります。
       </NotReadyNotice>
-      <EmptyState title="モニターURLはありません">
+      <EmptyState icon="monitor" title="モニターURLはありません">
         URLは、この画面でだけ見られます。合言葉を変えると、古いURLはすぐに使えなくなります。
       </EmptyState>
     </>

@@ -58,18 +58,39 @@ export function isRunning(
   return date === today && periodAt(minutes)?.no === periodNo;
 }
 
-/** The marks of a lesson changed in the system. Shown to everyone (R3-11). */
-export function LessonBadges({ lesson }: { lesson: LessonView }) {
+/**
+ * The marks of a lesson changed in the system. Shown to everyone (R3-11).
+ * wrap: let the badges wrap inside a narrow cell (week table) instead of widening it.
+ */
+export function LessonBadges({
+  lesson,
+  wrap = false,
+}: {
+  lesson: LessonView;
+  wrap?: boolean;
+}) {
   return (
     <>
-      {lesson.cancelled && <Badge kind="error">休講</Badge>}
-      {lesson.extra && <Badge kind="busy">補講</Badge>}
+      {lesson.cancelled && (
+        <Badge kind="error" wrap={wrap}>
+          休講
+        </Badge>
+      )}
+      {lesson.extra && (
+        <Badge kind="busy" wrap={wrap}>
+          補講
+        </Badge>
+      )}
       {lesson.previousRoom !== null && (
-        <Badge kind="warning">
+        <Badge kind="warning" wrap={wrap}>
           教室変更({roomText(lesson.previousRoom)}から変更)
         </Badge>
       )}
-      {lesson.previousTeachers !== null && <Badge kind="warning">代理</Badge>}
+      {lesson.previousTeachers !== null && (
+        <Badge kind="warning" wrap={wrap}>
+          代理
+        </Badge>
+      )}
     </>
   );
 }

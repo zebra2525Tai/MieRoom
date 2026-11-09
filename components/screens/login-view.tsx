@@ -14,25 +14,31 @@ export function LoginView({
   action?: ComponentProps<"form">["action"];
 }) {
   return (
-    <main className="grid min-h-screen bg-white md:grid-cols-[1.1fr_1fr]">
-      <section className="flex flex-col justify-center bg-navy px-7 py-8 text-white md:px-[clamp(35px,7vw,110px)] md:py-16">
-        <div className="pb-6 md:pb-16">
-          <Brand light />
+    // Below lg: stacked, a compact navy band on top and the form right below it;
+    // both are 370px wide and centred, so their edges line up.
+    // From lg: two halves, the copy sits toward the middle (right side of the navy half).
+    <main className="grid min-h-screen grid-rows-[auto_1fr] bg-white lg:grid-cols-[1.1fr_1fr] lg:grid-rows-none">
+      <section className="flex flex-col justify-center bg-navy px-6 py-8 text-white sm:py-12 lg:px-[clamp(35px,6vw,120px)] lg:py-16">
+        <div className="mx-auto w-full max-w-[370px] lg:mr-0 lg:max-w-[520px]">
+          <div className="pb-6 lg:pb-16">
+            <Brand light />
+          </div>
+          <h1 className="text-[26px] font-semibold leading-relaxed tracking-wide sm:text-[30px] lg:text-[clamp(28px,3.1vw,43px)]">
+            次の教室も、
+            <br />
+            先生の居場所も。
+          </h1>
+          <p className="mt-4 text-xs leading-loose text-[#cfd7ff] lg:mt-5 lg:text-[13px]">
+            学校の予定を、分かりやすく。
+            <br />
+            教室の使用状況と先生の位置をまとめて確認できます。
+          </p>
         </div>
-        <h1 className="text-[26px] font-semibold leading-relaxed tracking-wide md:text-[clamp(28px,3.1vw,43px)]">
-          次の教室も、
-          <br />
-          先生の居場所も。
-        </h1>
-        <p className="mt-4 text-xs leading-loose text-[#cfd7ff] md:mt-5 md:text-[13px]">
-          学校の予定を、分かりやすく。
-          <br />
-          教室の使用状況と先生の位置をまとめて確認できます。
-        </p>
       </section>
-      <section className="flex items-center justify-center px-6 py-10">
+      <section className="flex items-start justify-center px-6 py-10 sm:py-14 lg:items-center lg:py-10">
         <div className="w-full max-w-[370px]">
-          <div className="mb-3.5 text-[11px] font-bold tracking-[0.12em] text-brand">
+          {/* Below lg the brand is right above, so the name is not repeated. */}
+          <div className="mb-3.5 hidden text-[11px] font-bold tracking-[0.12em] text-brand lg:block">
             ミエルーム
           </div>
           <h2 className="text-[23px] font-bold sm:text-[25px]">ログイン</h2>

@@ -11,7 +11,7 @@ export function Brand({ light = false }: { light?: boolean }) {
           ミエルーム
         </div>
         <div
-          className={`text-[11px] tracking-wider ${light ? "text-white/50" : "text-muted"}`}
+          className={`text-[11px] tracking-wider ${light ? "text-[#cfd7ff]" : "text-muted"}`}
         >
           教室・先生ナビ
         </div>

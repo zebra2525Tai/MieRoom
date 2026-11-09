@@ -66,9 +66,10 @@ export function ImportView({
       <TableWrap>
         <thead>
           <tr>
-            <Th>クラス</Th>
+            {/* 2つの月の列を同じ幅にする(中身の量で幅が変わらない) */}
+            <Th className="sm:w-[240px]">クラス</Th>
             {months.map((month, index) => (
-              <Th key={month}>
+              <Th key={month} className="w-[38%]">
                 {formatMonth(month)}
                 <span className="ml-2 inline-block align-middle">
                   <Badge kind={WINDOW[windows[index]].kind}>

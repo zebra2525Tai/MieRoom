@@ -27,15 +27,35 @@
 @layer base {
   body {
     @apply bg-canvas text-ink text-sm leading-[1.65];
+    /* Japanese line breaking: break between phrases where the browser can (Chrome and
+       Edge; others fall back to normal), never before small kana or ー, and break a
+       phrase that is longer than its box instead of letting it overflow. */
+    word-break: auto-phrase;
+    line-break: strict;
+    overflow-wrap: break-word;
+  }
+
+  /* No one-character last lines. */
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  p,
+  li,
+  dd {
+    text-wrap: pretty;
   }
 
   button {
     cursor: pointer;
   }
 
+  /* Fallback for plain buttons. Button sets readable colors per variant instead. */
   button:disabled {
     cursor: not-allowed;
-    opacity: 0.46;
+    opacity: 0.6;
   }
 
   a:focus-visible,
@@ -46,5 +66,36 @@
   summary:focus-visible {
     outline: 3px solid #4b6bff;
     outline-offset: 3px;
+  }
+}
+
+/* Sideways-scrolling box (TableWrap): a soft shadow shows on the side where more
+   content is hidden, and disappears at that end. The white covers scroll with the
+   content ("local"); the shadows stay at the edges ("scroll"). CSS only, no script. */
+@utility scroll-shadow-x {
+  background:
+    linear-gradient(to right, #fff 30%, rgb(255 255 255 / 0)) left center / 40px
+      100% no-repeat local,
+    linear-gradient(to left, #fff 30%, rgb(255 255 255 / 0)) right center / 40px
+      100% no-repeat local,
+    linear-gradient(to right, #14246b2e, #14246b00) left center / 14px 100%
+      no-repeat scroll,
+    linear-gradient(to left, #14246b2e, #14246b00) right center / 14px 100%
+      no-repeat scroll,
+    #fff;
+}
+
+/* Selects: the native arrow is replaced by a light chevron with room on the right, so
+   the text starts at the same inset as inputs. --chevron-inset moves the chevron. */
+@utility select-chevron {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23586579' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-position: right var(--chevron-inset, 12px) center;
+  background-repeat: no-repeat;
+  background-size: 14px 14px;
+
+  @media (forced-colors: active) {
+    appearance: auto;
+    background-image: none;
   }
 }

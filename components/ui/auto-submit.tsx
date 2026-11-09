@@ -1,13 +1,13 @@
 "use client";
 
 import type { ComponentProps } from "react";
-import { filterFieldClass } from "./form";
+import { filterFieldClass, filterSelectClass } from "./form";
 
 // Filters are plain GET forms. These submit as soon as a value is chosen, so a filter
 // needs no separate button; a <noscript> button covers browsers without JavaScript.
 
 export function AutoSubmitSelect({
-  className = filterFieldClass,
+  className = filterSelectClass,
   ...props
 }: ComponentProps<"select">) {
   return (

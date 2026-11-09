@@ -1,6 +1,8 @@
 import Form from "next/form";
+import { Fragment } from "react";
 import { AutoSubmitInput, AutoSubmitSelect } from "@/components/ui/auto-submit";
 import { LinkButton } from "@/components/ui/button";
+import { filterFieldClass, filterSelectClass } from "@/components/ui/form";
 import {
   Badge,
   Callout,
@@ -31,6 +33,7 @@ import {
 import { addDays, formatDate } from "@/lib/domain/school-date";
 import { MESSAGES } from "@/lib/messages";
 import { withQuery } from "@/lib/url";
+import { ScrollToSelectedColumn } from "./rooms-scroll";
 
 const STATUS_KIND: Record<SlotStatus["kind"], BadgeKind> = {
   free: "available",
@@ -43,6 +46,31 @@ const STATUS_KIND: Record<SlotStatus["kind"], BadgeKind> = {
 export function SlotBadge({ status }: { status: SlotStatus }) {
   return (
     <Badge kind={STATUS_KIND[status.kind]}>{slotStatusLabel(status)}</Badge>
+  );
+}
+
+/**
+ * A slot's status in a narrow cell or card: a lesson shows a short 授業 badge with the
+ * class name on its own line below, so a long class name wraps instead of widening the
+ * column (S04 時限表) or overflowing the card. Other statuses are the plain badge.
+ */
+function SlotStatusDetail({
+  status,
+  align = "start",
+}: {
+  status: SlotStatus;
+  align?: "start" | "end";
+}) {
+  if (status.kind !== "lesson") return <SlotBadge status={status} />;
+  return (
+    <span
+      className={`flex min-w-0 flex-col gap-0.5 ${align === "end" ? "items-end text-right" : "items-start"}`}
+    >
+      <Badge kind={STATUS_KIND.lesson}>授業</Badge>
+      <span className="whitespace-normal text-[11px] leading-snug text-muted">
+        {status.className}
+      </span>
+    </span>
   );
 }
 
@@ -64,11 +92,11 @@ function RoomCard({
   return (
     <Card className="flex flex-col p-4">
       <div className="flex items-center justify-between gap-1.5">
-        <span className="text-[23px] font-bold tracking-tight">
+        <span className="min-w-0 text-[23px] font-bold tracking-tight">
           {room.name}
         </span>
         {room.building && (
-          <span className="rounded-[5px] bg-[#edf0f5] px-1.5 py-0.5 text-[11px] text-[#586579]">
+          <span className="shrink-0 rounded-[5px] bg-[#edf0f5] px-1.5 py-0.5 text-[11px] text-[#586579]">
             {room.building}
           </span>
         )}
@@ -76,15 +104,20 @@ function RoomCard({
       <div className="mb-3 mt-0.5 text-[11px] text-muted">
         {room.note ?? KIND_LABEL[room.kind]}
       </div>
-      {[first, second].map((slot) => (
-        <div
-          key={slot.no}
-          className="mt-1 flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5"
-        >
-          <span className="text-[11px] text-muted">{slot.half}</span>
-          <SlotBadge status={room.slots[slot.no]} />
-        </div>
-      ))}
+      {/* flex-1: the reserve buttons line up at the bottom of a row of cards. */}
+      <div className="flex-1">
+        {[first, second].map((slot) => (
+          <div
+            key={slot.no}
+            className="mt-1 flex items-start justify-between gap-2"
+          >
+            <span className="shrink-0 py-1 text-[11px] leading-tight text-muted">
+              {slot.half}
+            </span>
+            <SlotStatusDetail status={room.slots[slot.no]} align="end" />
+          </div>
+        ))}
+      </div>
       {reserveHref && (
         <LinkButton size="sm" href={reserveHref} className="mt-3">
           この教室を予約
@@ -164,7 +197,11 @@ export function RoomsView({
         }
       />
       <FilterBar>
-        <Form action={basePath} className="flex flex-wrap items-center gap-2.5">
+        {/* Phones and tablets: an even two-column grid. From lg: one row. */}
+        <Form
+          action={basePath}
+          className="grid w-full grid-cols-[minmax(0,5fr)_minmax(0,6fr)] gap-2 sm:grid-cols-2 lg:flex lg:w-auto lg:flex-wrap lg:items-center lg:gap-2.5"
+        >
           {!onlyFree && <input type="hidden" name="all" value="1" />}
           {layout === "table" && (
             <input type="hidden" name="layout" value="table" />
@@ -177,12 +214,14 @@ export function RoomsView({
             max={addDays(today, 30)}
             defaultValue={date}
             aria-label="日付"
+            className={`${filterFieldClass} w-full lg:w-auto`}
           />
           <AutoSubmitSelect
             key={`period-${periodNo}`}
             name="period"
             defaultValue={periodNo}
             aria-label="時限"
+            className={`${filterSelectClass} w-full lg:w-auto`}
           >
             {PERIODS.map((period) => (
               <option key={period.no} value={period.no}>
@@ -195,6 +234,7 @@ export function RoomsView({
             name="kind"
             defaultValue={kind ?? ""}
             aria-label="分類"
+            className={`${filterSelectClass} w-full lg:w-auto`}
           >
             <option value="">すべての分類</option>
             <option value="HOMEROOM">ホームルーム</option>
@@ -205,6 +245,7 @@ export function RoomsView({
             name="building"
             defaultValue={building ?? ""}
             aria-label="フロア"
+            className={`${filterSelectClass} w-full lg:w-auto`}
           >
             <option value="">すべてのフロア</option>
             {buildings.map((item) => (
@@ -217,9 +258,10 @@ export function RoomsView({
             <button type="submit">絞り込む</button>
           </noscript>
         </Form>
-        <div className="sm:ml-auto">
+        <div className="w-full lg:ml-auto lg:w-auto">
           <Segmented
             label="空きで絞る"
+            stretch
             items={[
               {
                 label: "空きだけ",
@@ -238,7 +280,7 @@ export function RoomsView({
 
       {undecidedClasses.length > 0 && (
         <Callout kind="warning">
-          {MESSAGES.MW001(undecidedClasses.join("、"))}
+          <UndecidedClassesMessage classes={undecidedClasses} />
         </Callout>
       )}
 
@@ -258,7 +300,7 @@ export function RoomsView({
           分類やフロアの条件を変えてください。
         </EmptyState>
       ) : layout === "cards" ? (
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6">
           {rooms.map((room) => (
             <RoomCard
               key={room.id}
@@ -269,44 +311,84 @@ export function RoomsView({
           ))}
         </div>
       ) : (
-        <TableWrap>
-          <thead>
-            <tr>
-              <Th className="sticky left-0 z-10">教室</Th>
+        // Fixed, even columns: 教室 + 8 slots of 104px (982px from sm) fit the
+        // 1072px content box at 1366. Narrower screens scroll sideways, opening
+        // on the chosen period.
+        <ScrollToSelectedColumn selected={periodNo}>
+          <TableWrap tableClassName="table-fixed">
+            <colgroup>
+              <col className="w-[112px] sm:w-[150px]" />
               {SLOTS.map((slot) => (
-                <Th key={slot.no} highlight={slot.periodNo === periodNo}>
-                  {slot.label}
-                  <span className="mt-0.5 block font-normal">
-                    {slot.start}-{slot.end}
-                  </span>
-                </Th>
+                <col key={slot.no} className="w-[104px]" />
               ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rooms.map((room) => (
-              <tr key={room.id}>
-                <Td className="sticky left-0 z-10 bg-white">
-                  <strong>{room.name}</strong>
-                  <SubText>
-                    {[room.building, room.note ?? KIND_LABEL[room.kind]]
-                      .filter(Boolean)
-                      .join("・")}
-                  </SubText>
-                </Td>
+            </colgroup>
+            <thead>
+              <tr>
+                <Th stickyLeft>教室</Th>
                 {SLOTS.map((slot) => (
-                  <Td key={slot.no}>
-                    <SlotBadge status={room.slots[slot.no]} />
-                  </Td>
+                  <Th
+                    key={slot.no}
+                    highlight={slot.periodNo === periodNo}
+                    data-selected={slot.periodNo === periodNo || undefined}
+                  >
+                    {slot.label}
+                    <span className="mt-0.5 block font-normal">
+                      {slot.start}-{slot.end}
+                    </span>
+                  </Th>
                 ))}
               </tr>
-            ))}
-          </tbody>
-        </TableWrap>
+            </thead>
+            <tbody>
+              {rooms.map((room) => (
+                <tr key={room.id}>
+                  <Td stickyLeft className="whitespace-normal">
+                    <strong>{room.name}</strong>
+                    <SubText>
+                      {[room.building, room.note ?? KIND_LABEL[room.kind]]
+                        .filter(Boolean)
+                        .join("・")}
+                    </SubText>
+                  </Td>
+                  {SLOTS.map((slot) => (
+                    <Td
+                      key={slot.no}
+                      className={
+                        slot.periodNo === periodNo ? "bg-[#f2f5ff]" : ""
+                      }
+                    >
+                      <SlotStatusDetail status={room.slots[slot.no]} />
+                    </Td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </TableWrap>
+        </ScrollToSelectedColumn>
       )}
       <Footnote>
         授業・予約に基づく表示です。実際の在室は検知していません。
       </Footnote>
+    </>
+  );
+}
+
+/** MW001 with each class name kept on one line, so a name such as 医療情報1年
+ *  never splits; lines break only between names or around the parentheses.
+ *  The wording itself still comes from MESSAGES. */
+function UndecidedClassesMessage({ classes }: { classes: string[] }) {
+  const marker = "\u0000";
+  const [before, after = ""] = MESSAGES.MW001(marker).split(marker);
+  return (
+    <>
+      {before}
+      {classes.map((name, index) => (
+        <Fragment key={name}>
+          {index > 0 && "、"}
+          <span className="whitespace-nowrap">{name}</span>
+        </Fragment>
+      ))}
+      {after}
     </>
   );
 }

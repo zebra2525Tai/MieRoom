@@ -1,7 +1,15 @@
 import Form from "next/form";
 import { AutoSubmitInput, AutoSubmitSelect } from "@/components/ui/auto-submit";
 import { Button } from "@/components/ui/button";
-import { Field, fieldClass, textareaClass } from "@/components/ui/form";
+import {
+  Field,
+  FormActions,
+  choiceCheckedClass,
+  fieldClass,
+  readOnlyFieldClass,
+  selectClass,
+  textareaClass,
+} from "@/components/ui/form";
 import {
   Callout,
   Card,
@@ -60,8 +68,10 @@ export function ReservationFormView({
 }) {
   const room = rooms.find((item) => item.id === roomId) ?? null;
   const error = checkMessage(check, date, today);
+  // The heading, the notice and both cards share one readable width (about 900px), so
+  // the labels, the slots and the submit button stay close together on wide screens.
   return (
-    <>
+    <div className="max-w-4xl">
       <PageHeading
         title={mode === "apply" ? "予約の申請" : "代理入力"}
         description={
@@ -82,7 +92,7 @@ export function ReservationFormView({
               key={roomId ?? "none"}
               name="room"
               defaultValue={roomId ?? ""}
-              className={fieldClass}
+              className={selectClass}
             >
               <option value="">選んでください</option>
               {rooms.map((item) => (
@@ -125,7 +135,8 @@ export function ReservationFormView({
               </span>
             </legend>
             {room ? (
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
+              // Two columns from sm: each row is one period (前半 | 後半).
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {SLOTS.map((slot) => {
                   const status = room.slots[slot.no];
                   const enabled = selectable(status);
@@ -133,7 +144,9 @@ export function ReservationFormView({
                     <label
                       key={slot.no}
                       className={`flex items-center gap-2.5 rounded-lg border border-line p-3 text-xs ${
-                        enabled ? "cursor-pointer" : "bg-[#f6f8fc] opacity-70"
+                        enabled
+                          ? `cursor-pointer bg-white hover:border-[#8a96ad] ${choiceCheckedClass}`
+                          : "cursor-not-allowed bg-[#f6f8fc]"
                       }`}
                     >
                       <input
@@ -142,9 +155,12 @@ export function ReservationFormView({
                         value={slot.no}
                         disabled={!enabled}
                         defaultChecked={enabled && slot.periodNo === periodNo}
+                        className="size-4 shrink-0 accent-brand"
                       />
                       <span className="min-w-0">
-                        <span className="block font-semibold">
+                        <span
+                          className={`block font-semibold ${enabled ? "" : "text-[#586579]"}`}
+                        >
                           {slot.label}
                         </span>
                         <span className="block text-[11px] text-muted">
@@ -166,7 +182,7 @@ export function ReservationFormView({
           </fieldset>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="用途" required>
-              <select name="purpose" defaultValue="" className={fieldClass}>
+              <select name="purpose" defaultValue="" className={selectClass}>
                 <option value="" disabled>
                   選んでください
                 </option>
@@ -179,20 +195,20 @@ export function ReservationFormView({
               <input
                 readOnly
                 value={mode === "apply" ? "ログイン中の人" : "ログイン中の先生"}
-                className={`${fieldClass} bg-[#edf0f5] text-[#586579]`}
+                className={readOnlyFieldClass}
               />
             </Field>
             <Field label="備考" full help="100文字まで">
               <textarea name="note" maxLength={100} className={textareaClass} />
             </Field>
           </div>
-          <div className="flex justify-end">
+          <FormActions>
             <Button type="submit" variant="primary" disabled>
               {mode === "apply" ? "申請する" : "保存する"}
             </Button>
-          </div>
+          </FormActions>
         </form>
       </Card>
-    </>
+    </div>
   );
 }
