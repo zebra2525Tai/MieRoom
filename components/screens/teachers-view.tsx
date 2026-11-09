@@ -1,5 +1,6 @@
 import Form from "next/form";
 import { Button } from "@/components/ui/button";
+import { SearchField } from "@/components/ui/form";
 import { Icon } from "@/components/ui/icon";
 import {
   Badge,
@@ -35,16 +36,29 @@ function LocationBox({ location }: { location: TeacherLocation }) {
       : location.kind === "out-of-area"
         ? "受信機に検知されていません(校外という意味ではありません)"
         : "タグが登録されていません";
+  // Only a real room is loud (large navy on the brand tint). 検知エリア外 and
+  // 位置情報なし are quieter, so they do not read like a place.
+  const isRoom = location.kind === "room";
   return (
-    <div className="flex items-center justify-between gap-2.5 rounded-[9px] bg-[#f6f8fc] p-3.5">
+    <div
+      className={`flex items-center justify-between gap-2.5 rounded-[9px] p-3.5 ${isRoom ? "bg-brand-tint" : "bg-[#f6f8fc]"}`}
+    >
       <div className="min-w-0">
-        <strong className="text-[19px] text-navy">{title}</strong>
+        <strong
+          className={
+            isRoom
+              ? "text-[19px] text-navy"
+              : "text-[15px] font-semibold text-[#4a576c]"
+          }
+        >
+          {title}
+        </strong>
         <p className="mt-0.5 text-[11px] text-[#586579]">{note}</p>
       </div>
       <Icon
-        name={location.kind === "room" ? "pin" : "info"}
+        name={isRoom ? "pin" : "info"}
         size={23}
-        className="text-[#586579]"
+        className={isRoom ? "text-navy" : "text-[#586579]"}
       />
     </div>
   );
@@ -62,28 +76,19 @@ export function TeachersView({
 }) {
   return (
     <>
-      <PageHeading
-        title="先生一覧"
-        description="先生のいまの位置と、担当の教科・教室を確認できます。"
-      />
+      <PageHeading title="先生一覧" />
       <FilterBar>
+        {/* The field takes the row and the button keeps its label on one line. */}
         <Form action={basePath} className="flex w-full items-center gap-2">
-          <div className="relative w-full max-w-[310px]">
-            <Icon
-              name="search"
-              size={16}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-[#586579]"
-            />
-            <input
-              key={query}
-              name="q"
-              defaultValue={query}
-              aria-label="名前で絞る"
-              placeholder="名前で絞る"
-              className="h-[38px] w-full rounded-lg border border-line bg-[#f6f8fc] pl-9 pr-3 text-xs"
-            />
-          </div>
-          <Button type="submit" size="sm" className="h-[38px]">
+          <SearchField
+            key={query}
+            className="min-w-0 flex-1 sm:max-w-[310px]"
+            name="q"
+            defaultValue={query}
+            aria-label="名前で絞る"
+            placeholder="名前で絞る"
+          />
+          <Button type="submit" size="sm" className="h-[38px] shrink-0">
             絞り込む
           </Button>
         </Form>
@@ -94,11 +99,13 @@ export function TeachersView({
           名前の条件を変えてください。
         </EmptyState>
       ) : (
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
           {teachers.map((teacher) => (
             <Card key={teacher.id} className="flex flex-col gap-4 p-5">
               <div className="flex items-center gap-3">
-                <div className="text-base font-bold">{teacher.name}</div>
+                <div className="min-w-0 text-[17px] font-bold">
+                  {teacher.name}
+                </div>
                 {teacher.location.kind === "room" && (
                   <div className="ml-auto">
                     <Badge kind="available">検知中</Badge>
@@ -107,11 +114,17 @@ export function TeachersView({
               </div>
               <LocationBox location={teacher.location} />
               {teacher.assignments.length > 0 && (
-                <details className="text-xs">
-                  <summary className="cursor-pointer font-semibold text-brand-dark">
+                // mt-auto: 担当 sits at the bottom, at the same height in every card of a row.
+                <details className="group mt-auto text-xs">
+                  <summary className="flex min-h-10 cursor-pointer list-none items-center gap-1.5 font-semibold text-brand-dark [&::-webkit-details-marker]:hidden">
+                    <Icon
+                      name="chevron"
+                      size={14}
+                      className="transition-transform group-open:rotate-90 motion-reduce:transition-none"
+                    />
                     担当({teacher.assignments.length})
                   </summary>
-                  <ul className="mt-2 flex flex-col gap-1 text-muted">
+                  <ul className="mt-1 flex flex-col gap-1 pl-5 text-muted">
                     {teacher.assignments.map((item) => (
                       <li key={`${item.className}/${item.subject}`}>
                         <span className="text-ink">{item.className}</span>{" "}

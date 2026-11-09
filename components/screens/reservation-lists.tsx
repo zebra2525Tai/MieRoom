@@ -2,6 +2,7 @@ import Form from "next/form";
 import type { ReactNode } from "react";
 import { AutoSubmitInput, AutoSubmitSelect } from "@/components/ui/auto-submit";
 import { LinkButton } from "@/components/ui/button";
+import { filterFieldClass, filterSelectClass } from "@/components/ui/form";
 import { Icon } from "@/components/ui/icon";
 import { Pager } from "@/components/ui/pager";
 import { ReviewButtons } from "./review-buttons";
@@ -60,37 +61,32 @@ export type ReservationRow = {
 };
 
 // Where a table does not fit, each reservation becomes a card instead: the state
-// and the buttons must be visible without scrolling sideways. The 6-column tables
-// fit from xl (1280px); the 8-column one of S11 needs 2xl (1536px).
-// Written out in full so that Tailwind finds the class names.
+// and the buttons must be visible without scrolling sideways. The tables have at
+// most 6 columns (S11 merges 申請者・申請日時 and 状態・対応) and fit from xl (1280px).
 const LAYOUT = {
-  xl: {
-    table: "hidden xl:block",
-    cards: "grid gap-3 lg:grid-cols-2 xl:hidden",
-  },
-  "2xl": {
-    table: "hidden 2xl:block",
-    cards: "grid gap-3 lg:grid-cols-2 2xl:hidden",
-  },
+  table: "hidden xl:block",
+  cards: "grid gap-3 lg:grid-cols-2 xl:hidden",
 } as const;
 
+/** The date and the room are the key facts: they lead, in a larger size. */
 function SlotSummary({ row }: { row: ReservationRow }) {
   return (
     <>
-      <strong>{row.dateText}</strong>
-      <SubText>
-        {row.slotText} / {row.room}
-      </SubText>
+      <strong className="text-sm">
+        {row.dateText}
+        <span className="ml-2">{row.room}</span>
+      </strong>
+      <SubText>{row.slotText}</SubText>
     </>
   );
 }
 
 function StatusCell({ row }: { row: ReservationRow }) {
   return (
-    <>
+    <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
       <StatusBadge status={row.status} />
-      {row.proxy && <SubText>代理</SubText>}
-    </>
+      {row.proxy && <Badge kind="neutral">代理</Badge>}
+    </span>
   );
 }
 
@@ -112,13 +108,23 @@ function PurposeCell({ row }: { row: ReservationRow }) {
   );
 }
 
-function ReviewActions({ row }: { row: ReservationRow }) {
+// Compact buttons in table rows; full-size ones, further apart, in cards (touch).
+type ActionSize = "sm" | "md";
+
+function ReviewActions({
+  row,
+  size = "sm",
+}: {
+  row: ReservationRow;
+  size?: ActionSize;
+}) {
   return (
     <ReviewButtons
       id={row.id}
       status={row.status}
       blocked={row.blockedReasons.length > 0}
       needsConfirm={row.needsConfirm === true}
+      size={size}
     />
   );
 }
@@ -180,7 +186,7 @@ function ReservationCard({
             <SlotSummary row={row} />
           </div>
           {showStatus && (
-            <div className="shrink-0 text-right">
+            <div className="flex shrink-0 items-center">
               <StatusCell row={row} />
             </div>
           )}
@@ -188,7 +194,9 @@ function ReservationCard({
         <dl className="mt-3 grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1.5">
           {fields}
         </dl>
-        {notes && <div className="mt-3 flex flex-col gap-1">{notes}</div>}
+        {notes && (
+          <div className="mt-3 flex flex-col gap-1 text-pretty">{notes}</div>
+        )}
         {actions && (
           <div className="mt-auto flex justify-end pt-3.5">{actions}</div>
         )}
@@ -214,7 +222,6 @@ export function MyReservationsView({
     <>
       <PageHeading
         title="自分の予約"
-        description="申請した予約の状態を確認できます。承認待ちの間は、取り下げられます。"
         actions={
           <LinkButton variant="primary" href="/reservations/new">
             <Icon name="plus" size={16} />
@@ -230,11 +237,12 @@ export function MyReservationsView({
       {rows.length === 0 ? (
         <EmptyState
           title="まだ予約はありません"
+          icon="file"
           action={<LinkButton href="/rooms">空き教室を見る</LinkButton>}
         />
       ) : (
         <>
-          <div className={LAYOUT.xl.table}>
+          <div className={LAYOUT.table}>
             <TableWrap>
               <thead>
                 <tr>
@@ -274,7 +282,7 @@ export function MyReservationsView({
               </tbody>
             </TableWrap>
           </div>
-          <ul className={LAYOUT.xl.cards}>
+          <ul className={LAYOUT.cards}>
             {rows.map((row) => (
               <ReservationCard
                 key={row.id}
@@ -295,7 +303,7 @@ export function MyReservationsView({
                 }
                 actions={
                   row.status === "pending" ? (
-                    <WithdrawButton id={row.id} />
+                    <WithdrawButton id={row.id} size="md" />
                   ) : null
                 }
               />
@@ -317,20 +325,25 @@ function ReviewTable({
 }) {
   const hasActions = (row: ReservationRow) =>
     row.status === "pending" || row.status === "approved";
-  // The two extra columns of S11 make the table about 300px wider.
-  const layout = showHandled ? LAYOUT["2xl"] : LAYOUT.xl;
   return (
     <>
-      <div className={layout.table}>
+      <div className={LAYOUT.table}>
         <TableWrap>
           <thead>
             <tr>
               <Th>日付・枠・教室</Th>
               <Th>用途・備考</Th>
-              <Th>申請者</Th>
-              <Th>申請日時</Th>
-              {showHandled && <Th>状態</Th>}
-              {showHandled && <Th>対応した先生・日時</Th>}
+              {showHandled ? (
+                <>
+                  <Th>申請者・申請日時</Th>
+                  <Th>状態・対応</Th>
+                </>
+              ) : (
+                <>
+                  <Th>申請者</Th>
+                  <Th>申請日時</Th>
+                </>
+              )}
               <Th>警告・理由</Th>
               <Th>操作</Th>
             </tr>
@@ -344,20 +357,30 @@ function ReviewTable({
                 <Td>
                   <PurposeCell row={row} />
                 </Td>
-                <Td>{row.applicant}</Td>
-                <Td>{row.createdText}</Td>
-                {showHandled && (
-                  <Td>
-                    <StatusCell row={row} />
-                  </Td>
-                )}
-                {showHandled && (
-                  <Td>
-                    <HandledCell row={row} />
-                  </Td>
+                {showHandled ? (
+                  <>
+                    <Td>
+                      {row.applicant}
+                      <SubText>{row.createdText}</SubText>
+                    </Td>
+                    <Td>
+                      <StatusCell row={row} />
+                      {row.handledBy && (
+                        <SubText>
+                          {row.handledBy}
+                          {row.handledText && ` ${row.handledText}`}
+                        </SubText>
+                      )}
+                    </Td>
+                  </>
+                ) : (
+                  <>
+                    <Td>{row.applicant}</Td>
+                    <Td>{row.createdText}</Td>
+                  </>
                 )}
                 <Td className="whitespace-normal">
-                  <div className="flex min-w-[180px] flex-col gap-1">
+                  <div className="flex min-w-[180px] flex-col gap-1 text-pretty">
                     {hasNotes(row) ? (
                       <ReviewNotes row={row} />
                     ) : (
@@ -377,7 +400,7 @@ function ReviewTable({
           </tbody>
         </TableWrap>
       </div>
-      <ul className={layout.cards}>
+      <ul className={LAYOUT.cards}>
         {rows.map((row) => (
           <ReservationCard
             key={row.id}
@@ -398,7 +421,9 @@ function ReviewTable({
               </>
             }
             notes={hasNotes(row) ? <ReviewNotes row={row} /> : null}
-            actions={hasActions(row) ? <ReviewActions row={row} /> : null}
+            actions={
+              hasActions(row) ? <ReviewActions row={row} size="md" /> : null
+            }
           />
         ))}
       </ul>
@@ -425,11 +450,13 @@ export function TeacherHomeView({
     <>
       <PageHeading
         title="先生ホーム"
-        description="承認待ちの予約を、日付と最初の枠の早い順に出します。どの先生でも承認・却下できます。"
         actions={
           <>
             <LinkButton href="/teacher/reservations">予約の一覧</LinkButton>
-            <LinkButton href="/teacher/reservations/new">代理入力</LinkButton>
+            <LinkButton variant="primary" href="/teacher/reservations/new">
+              <Icon name="plus" size={16} />
+              代理入力
+            </LinkButton>
             <LinkButton href="/teacher/blocks">使用止め</LinkButton>
           </>
         }
@@ -444,7 +471,7 @@ export function TeacherHomeView({
         </Callout>
       )}
       {rows.length === 0 ? (
-        <EmptyState title="承認待ちの予約はありません" />
+        <EmptyState title="承認待ちの予約はありません" icon="check" />
       ) : (
         <>
           <ReviewTable rows={rows} showHandled={false} />
@@ -486,7 +513,6 @@ export function TeacherReservationsView({
     <>
       <PageHeading
         title="予約の一覧"
-        description="状態・期間・教室で絞って、予約を確認・承認・取消できます。"
         actions={
           <LinkButton variant="primary" href="/teacher/reservations/new">
             <Icon name="plus" size={16} />
@@ -495,11 +521,19 @@ export function TeacherReservationsView({
         }
       />
       <FilterBar>
-        <Form action={basePath} className="flex flex-wrap items-center gap-2.5">
+        {/* Phones: one full-width row per filter. sm to lg: the two selects share a row
+            and the date range has its own (so 〜 never ends a line alone and no row holds
+            a single narrow control). From lg: one row. grid-cols-1 caps the track at the
+            bar width, so the 16px date inputs shrink instead of widening the bar. */}
+        <Form
+          action={basePath}
+          className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-2.5 lg:flex lg:w-auto lg:flex-wrap lg:items-center"
+        >
           <AutoSubmitSelect
             name="status"
             defaultValue={status}
             aria-label="状態"
+            className={`${filterSelectClass} w-full lg:w-auto`}
           >
             <option value="">すべての状態</option>
             {(Object.keys(STATUS) as ReservationStatus[]).map((key) => (
@@ -508,22 +542,12 @@ export function TeacherReservationsView({
               </option>
             ))}
           </AutoSubmitSelect>
-          <AutoSubmitInput
-            key={`start-${start}`}
-            type="date"
-            name="start"
-            defaultValue={start}
-            aria-label="開始日"
-          />
-          <span className="text-xs text-muted">〜</span>
-          <AutoSubmitInput
-            key={`end-${end}`}
-            type="date"
-            name="end"
-            defaultValue={end}
-            aria-label="終了日"
-          />
-          <AutoSubmitSelect name="room" defaultValue={roomId} aria-label="教室">
+          <AutoSubmitSelect
+            name="room"
+            defaultValue={roomId}
+            aria-label="教室"
+            className={`${filterSelectClass} w-full lg:w-auto`}
+          >
             <option value="">すべての教室</option>
             {rooms.map((room) => (
               <option key={room.id} value={room.id}>
@@ -531,6 +555,25 @@ export function TeacherReservationsView({
               </option>
             ))}
           </AutoSubmitSelect>
+          <div className="flex items-center gap-2 sm:col-span-2 lg:col-span-1">
+            <AutoSubmitInput
+              key={`start-${start}`}
+              type="date"
+              name="start"
+              defaultValue={start}
+              aria-label="開始日"
+              className={`${filterFieldClass} min-w-0 flex-1 lg:flex-none`}
+            />
+            <span className="shrink-0 text-xs text-muted">〜</span>
+            <AutoSubmitInput
+              key={`end-${end}`}
+              type="date"
+              name="end"
+              defaultValue={end}
+              aria-label="終了日"
+              className={`${filterFieldClass} min-w-0 flex-1 lg:flex-none`}
+            />
+          </div>
           <noscript>
             <button type="submit">絞り込む</button>
           </noscript>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useRef, useState, useTransition } from "react";
+import { useId, useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Badge, Callout, TableWrap, Td, Th } from "@/components/ui/parts";
@@ -65,6 +65,7 @@ function tooBig(files: File[]): boolean {
 export function ImportPanel() {
   const router = useRouter();
   const input = useRef<HTMLInputElement>(null);
+  const inputId = useId();
   const [files, setFiles] = useState<File[]>([]);
   const [view, setView] = useState<ImportCheckView | null>(null);
   const [notice, setNotice] = useState<
@@ -135,21 +136,32 @@ export function ImportPanel() {
   return (
     <div>
       {/* 狭い画面では、ラベルを番号の下に置く(単語の途中で折り返さない) */}
-      <ol className="mb-6 mt-2 flex max-w-[680px] items-start gap-3 text-xs sm:items-center">
+      {/* 現在の段は塗りつぶし、済んだ段は薄い青。ドロップ枠の中央にそろえる */}
+      <ol className="mx-auto mb-6 mt-2 flex max-w-[680px] items-start gap-3 text-xs sm:items-center">
         {["ファイルを選ぶ", "確認する", "取り込む"].map((label, index) => (
           <li key={label} className="contents">
             {index > 0 && (
-              <div className="mt-[13px] h-px min-w-6 flex-1 bg-[#d5dae6] sm:mt-0" />
+              <div
+                className={`mt-[13px] h-px min-w-6 flex-1 sm:mt-0 ${index <= step ? "bg-action" : "bg-[#d5dae6]"}`}
+              />
             )}
             <div
               aria-current={index === step ? "step" : undefined}
-              className={`flex flex-col items-center gap-1.5 whitespace-nowrap sm:flex-row sm:gap-2 ${index === step ? "font-bold text-brand-dark" : "text-[#586579]"}`}
+              className={`flex flex-col items-center gap-1.5 whitespace-nowrap sm:flex-row sm:gap-2 ${
+                index === step
+                  ? "font-bold text-brand-dark"
+                  : index < step
+                    ? "text-brand-dark"
+                    : "text-[#586579]"
+              }`}
             >
               <span
                 className={`grid h-[27px] w-[27px] place-items-center rounded-full text-[11px] font-bold ${
                   index === step
-                    ? "bg-[#e8ecff] text-brand-dark"
-                    : "bg-[#edf0f5]"
+                    ? "bg-brand text-white"
+                    : index < step
+                      ? "bg-brand-tint text-brand-dark"
+                      : "bg-[#edf0f5]"
                 }`}
               >
                 {index + 1}
@@ -170,27 +182,40 @@ export function ImportPanel() {
             ),
           );
         }}
-        className="rounded-xl border-[1.5px] border-dashed border-[#8a96ad] bg-[#f6f8fc] px-6 py-10 text-center"
+        className="rounded-xl border-[1.5px] border-dashed border-[#8a96ad] bg-[#f6f8fc] px-4 py-8 text-center sm:px-6 sm:py-10"
       >
         <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-[14px] bg-[#e8ecff] text-[#4a576c]">
           <Icon name="upload" size={27} />
         </div>
         <h2 className="text-[17px] font-bold">取込用CSVを選ぶ</h2>
         <p className="mb-4 mt-2 text-xs text-muted">
-          複数まとめて選べます(1回50ファイル、1ファイル1MB、合計4MBまで)。ここにドラッグしてもかまいません。
+          {/* 上限の数字が行の途中で切れないよう、区切りごとにまとめる */}
+          複数まとめて選べます
+          <span className="inline-block">(1回50ファイル、</span>
+          <span className="inline-block">1ファイル1MB、</span>
+          <span className="inline-block">合計4MBまで)。</span>
+          ここにドラッグしてもかまいません。
           <br />
           エラーが1つでもあると、何も取り込みません。
         </p>
-        <div className="flex flex-wrap items-center justify-center gap-2">
+        {/* ネイティブの入力は見えなくして、ボタンの形のラベルから開く(キーボードでも入力にフォーカスが届く) */}
+        <div className="mx-auto flex max-w-xs flex-col items-stretch gap-2 sm:max-w-none sm:flex-row sm:items-center sm:justify-center">
           <input
             ref={input}
+            id={inputId}
             type="file"
             accept=".csv"
             multiple
-            aria-label="取込用CSV"
-            className="max-w-full text-xs"
+            className="peer sr-only"
             onChange={(event) => choose([...(event.currentTarget.files ?? [])])}
           />
+          <label
+            htmlFor={inputId}
+            className="inline-flex cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-line bg-white px-3.5 py-2.5 text-xs font-semibold leading-normal text-ink transition-colors hover:border-[#8a96ad] hover:bg-[#f6f8fc] peer-focus-visible:outline-3 peer-focus-visible:outline-offset-3 peer-focus-visible:outline-[#4b6bff]"
+          >
+            <Icon name="file" size={15} />
+            ファイルを選ぶ
+          </label>
           <Button
             variant="primary"
             disabled={pending || files.length === 0 || tooBig(files)}
@@ -200,6 +225,20 @@ export function ImportPanel() {
             <Icon name="arrow" size={15} />
           </Button>
         </div>
+        <p className="mx-auto mt-3 max-w-xl text-[11px] text-muted">
+          {files.length === 0 ? (
+            "ファイルが選ばれていません"
+          ) : (
+            <>
+              <span className="font-semibold text-ink">
+                {files.length}件を選んでいます
+              </span>
+              <span className="mt-0.5 line-clamp-2 break-all">
+                {files.map((file) => file.name).join("、")}
+              </span>
+            </>
+          )}
+        </p>
       </div>
 
       <div aria-live="polite" className="mt-5">

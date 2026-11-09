@@ -5,11 +5,17 @@ import { ConfirmButton } from "@/components/ui/confirm-button";
 import { MESSAGES, SYSTEM_ERROR_MESSAGE } from "@/lib/messages";
 
 // S07 「取り下げ」(承認待ちのときだけ出す)。MC101 → MI102。すでに対応済みなら ME110。
-export function WithdrawButton({ id }: { id: string }) {
+export function WithdrawButton({
+  id,
+  size = "sm",
+}: {
+  id: string;
+  size?: "sm" | "md";
+}) {
   const router = useRouter();
   return (
     <ConfirmButton
-      size="sm"
+      size={size}
       variant="danger"
       message={MESSAGES.MC101}
       onConfirm={async () => {

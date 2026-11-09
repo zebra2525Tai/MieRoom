@@ -3,7 +3,12 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Field, fieldClass } from "@/components/ui/form";
+import {
+  Field,
+  FormActions,
+  fieldClass,
+  selectClass,
+} from "@/components/ui/form";
 import { PERIODS } from "@/lib/domain/periods";
 import { MESSAGES, SYSTEM_ERROR_MESSAGE } from "@/lib/messages";
 
@@ -21,7 +26,7 @@ export function BlockForm({
 
   return (
     <form
-      className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_110px_minmax(0,1fr)_110px_auto] md:items-end"
+      className="grid gap-4 sm:grid-cols-2"
       onSubmit={async (event) => {
         event.preventDefault();
         if (busy) return;
@@ -65,8 +70,13 @@ export function BlockForm({
         setBusy(false);
       }}
     >
-      <Field label="教室" required>
-        <select name="room" defaultValue="" required className={fieldClass}>
+      <Field label="教室" required full>
+        <select
+          name="room"
+          defaultValue=""
+          required
+          className={`${selectClass} sm:w-[calc(50%-0.5rem)] md:max-lg:w-full`}
+        >
           <option value="" disabled>
             選んでください
           </option>
@@ -77,54 +87,55 @@ export function BlockForm({
           ))}
         </select>
       </Field>
-      <Field label="開始日" required>
-        <input
-          type="date"
-          name="startDate"
-          min={today}
-          defaultValue={today}
-          required
-          className={fieldClass}
-        />
-      </Field>
-      <Field label="開始の時限" required>
-        <select name="startPeriod" className={fieldClass}>
-          {PERIODS.map((period) => (
-            <option key={period.no} value={period.no}>
-              {period.label}
-            </option>
-          ))}
-        </select>
-      </Field>
-      <Field label="終了日" required>
-        <input
-          type="date"
-          name="endDate"
-          min={today}
-          defaultValue={today}
-          required
-          className={fieldClass}
-        />
-      </Field>
-      <Field label="終了の時限" required>
-        <select name="endPeriod" defaultValue={4} className={fieldClass}>
-          {PERIODS.map((period) => (
-            <option key={period.no} value={period.no}>
-              {period.label}
-            </option>
-          ))}
-        </select>
-      </Field>
-      <Button
-        type="submit"
-        variant="primary"
-        className="h-[41px]"
-        disabled={busy}
-      >
-        設定する
-      </Button>
+      <div className="grid grid-cols-[minmax(0,1fr)_110px] gap-2 md:max-lg:col-span-2">
+        <Field label="開始日" required>
+          <input
+            type="date"
+            name="startDate"
+            min={today}
+            defaultValue={today}
+            required
+            className={fieldClass}
+          />
+        </Field>
+        <Field label="開始の時限" required>
+          <select name="startPeriod" className={selectClass}>
+            {PERIODS.map((period) => (
+              <option key={period.no} value={period.no}>
+                {period.label}
+              </option>
+            ))}
+          </select>
+        </Field>
+      </div>
+      <div className="grid grid-cols-[minmax(0,1fr)_110px] gap-2 md:max-lg:col-span-2">
+        <Field label="終了日" required>
+          <input
+            type="date"
+            name="endDate"
+            min={today}
+            defaultValue={today}
+            required
+            className={fieldClass}
+          />
+        </Field>
+        <Field label="終了の時限" required>
+          <select name="endPeriod" defaultValue={4} className={selectClass}>
+            {PERIODS.map((period) => (
+              <option key={period.no} value={period.no}>
+                {period.label}
+              </option>
+            ))}
+          </select>
+        </Field>
+      </div>
+      <FormActions className="sm:col-span-2">
+        <Button type="submit" variant="primary" disabled={busy}>
+          設定する
+        </Button>
+      </FormActions>
       {error && (
-        <p role="alert" className="text-[11px] text-red-ink md:col-span-full">
+        <p role="alert" className="text-[11px] text-red-ink sm:col-span-2">
           {error}
         </p>
       )}

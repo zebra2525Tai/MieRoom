@@ -53,10 +53,7 @@ export function ImportView({
 }) {
   return (
     <>
-      <PageHeading
-        title="時間割の取り込み"
-        description="担任が作った取込用CSVを、まとめて確かめてから取り込みます。"
-      />
+      <PageHeading title="時間割の取り込み" />
       <ImportPanel />
 
       <SectionHead
@@ -66,9 +63,10 @@ export function ImportView({
       <TableWrap>
         <thead>
           <tr>
-            <Th>クラス</Th>
+            {/* 2つの月の列を同じ幅にする(中身の量で幅が変わらない) */}
+            <Th className="sm:w-[240px]">クラス</Th>
             {months.map((month, index) => (
-              <Th key={month}>
+              <Th key={month} className="w-[38%]">
                 {formatMonth(month)}
                 <span className="ml-2 inline-block align-middle">
                   <Badge kind={WINDOW[windows[index]].kind}>

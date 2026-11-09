@@ -45,6 +45,7 @@ export function ReviewButtons({
   status,
   blocked,
   needsConfirm,
+  size = "sm",
 }: {
   id: string;
   status: string;
@@ -52,6 +53,8 @@ export function ReviewButtons({
   blocked: boolean;
   /** MC201: an approved reservation is on the same slots. */
   needsConfirm: boolean;
+  /** Compact in table rows; full size, further apart, in cards (touch). */
+  size?: "sm" | "md";
 }) {
   const router = useRouter();
   const done = useDone();
@@ -73,10 +76,10 @@ export function ReviewButtons({
   if (status === "pending") {
     return (
       <div className="flex flex-col items-start gap-1.5">
-        <div className="flex gap-2">
+        <div className={`flex ${size === "md" ? "gap-3" : "gap-2"}`}>
           {needsConfirm ? (
             <ConfirmButton
-              size="sm"
+              size={size}
               variant="primary"
               disabled={blocked}
               message={MESSAGES.MC201}
@@ -92,7 +95,7 @@ export function ReviewButtons({
             </ConfirmButton>
           ) : (
             <Button
-              size="sm"
+              size={size}
               variant="primary"
               disabled={blocked || busy}
               onClick={async () => {
@@ -111,7 +114,7 @@ export function ReviewButtons({
             </Button>
           )}
           <ConfirmButton
-            size="sm"
+            size={size}
             variant="danger"
             message={MESSAGES.MC202}
             onConfirm={() =>
@@ -132,7 +135,7 @@ export function ReviewButtons({
   if (status === "approved") {
     return (
       <ConfirmButton
-        size="sm"
+        size={size}
         variant="danger"
         message={MESSAGES.MC203}
         onConfirm={() => run("/teacher/reservations/cancel", { id }, "MI203")}

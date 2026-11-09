@@ -4,7 +4,14 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-button";
-import { Field, fieldClass, textareaClass } from "@/components/ui/form";
+import {
+  Field,
+  FormActions,
+  choiceCheckedClass,
+  readOnlyFieldClass,
+  selectClass,
+  textareaClass,
+} from "@/components/ui/form";
 import { Callout, Card } from "@/components/ui/parts";
 import { PURPOSES, NOTE_MAX_LENGTH } from "@/lib/domain/reservation-core";
 import { SLOTS, type PeriodNo, type SlotNo } from "@/lib/domain/periods";
@@ -158,7 +165,7 @@ export function ReservationForm({
             </span>
           </legend>
           {statuses ? (
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {SLOTS.map((slot) => {
                 const status = statuses[slot.no];
                 const enabled = selectable(status);
@@ -166,7 +173,9 @@ export function ReservationForm({
                   <label
                     key={slot.no}
                     className={`flex items-center gap-2.5 rounded-lg border border-line p-3 text-xs ${
-                      enabled ? "cursor-pointer" : "bg-[#f6f8fc] opacity-70"
+                      enabled
+                        ? `cursor-pointer bg-white hover:border-[#8a96ad] ${choiceCheckedClass}`
+                        : "cursor-not-allowed bg-[#f6f8fc]"
                     }`}
                   >
                     <input
@@ -174,6 +183,7 @@ export function ReservationForm({
                       name="slots"
                       value={slot.no}
                       disabled={!enabled}
+                      className="size-4 shrink-0 accent-brand"
                       checked={chosen.has(slot.no)}
                       onChange={(event) => {
                         const next = new Set(chosen);
@@ -183,7 +193,11 @@ export function ReservationForm({
                       }}
                     />
                     <span className="min-w-0">
-                      <span className="block font-semibold">{slot.label}</span>
+                      <span
+                        className={`block font-semibold ${enabled ? "" : "text-[#586579]"}`}
+                      >
+                        {slot.label}
+                      </span>
                       <span className="block text-[11px] text-muted">
                         {slot.start}-{slot.end}
                       </span>
@@ -238,7 +252,7 @@ export function ReservationForm({
               name="purpose"
               value={purpose}
               onChange={(event) => setPurpose(event.target.value)}
-              className={fieldClass}
+              className={selectClass}
             >
               <option value="" disabled>
                 選んでください
@@ -252,7 +266,7 @@ export function ReservationForm({
             <input
               readOnly
               value={applicantLabel}
-              className={`${fieldClass} bg-[#edf0f5] text-[#586579]`}
+              className={readOnlyFieldClass}
             />
           </Field>
           <Field
@@ -269,7 +283,7 @@ export function ReservationForm({
             />
           </Field>
         </div>
-        <div className="flex justify-end">
+        <FormActions>
           <Button
             type="submit"
             variant="primary"
@@ -277,7 +291,7 @@ export function ReservationForm({
           >
             {submitLabel}
           </Button>
-        </div>
+        </FormActions>
       </form>
       <ConfirmDialog
         open={question !== null}

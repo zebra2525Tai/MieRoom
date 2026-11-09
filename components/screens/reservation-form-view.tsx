@@ -1,6 +1,6 @@
 import Form from "next/form";
 import { AutoSubmitInput, AutoSubmitSelect } from "@/components/ui/auto-submit";
-import { Field, fieldClass } from "@/components/ui/form";
+import { Field, fieldClass, selectClass } from "@/components/ui/form";
 import { Card, PageHeading } from "@/components/ui/parts";
 import type { PeriodNo } from "@/lib/domain/periods";
 import type { ApplicationCheck } from "@/lib/domain/reservation-rules";
@@ -53,16 +53,11 @@ export function ReservationFormView({
 }) {
   const room = rooms.find((item) => item.id === roomId) ?? null;
   const error = checkMessage(check, date, today);
+  // The heading, the notice and both cards share one readable width (about 900px), so
+  // the labels, the slots and the submit button stay close together on wide screens.
   return (
-    <>
-      <PageHeading
-        title={mode === "apply" ? "予約の申請" : "代理入力"}
-        description={
-          mode === "apply"
-            ? "教室・日付・枠を選んで申請します。先生が承認すると確定します。"
-            : "先生が予約を入れます。保存すると、その場で承認済みになります。"
-        }
-      />
+    <div className="max-w-4xl">
+      <PageHeading title={mode === "apply" ? "予約の申請" : "代理入力"} />
 
       <Card className="mb-4 p-5 sm:p-6">
         <Form action={basePath} className="grid gap-4 sm:grid-cols-2">
@@ -72,7 +67,7 @@ export function ReservationFormView({
               key={roomId ?? "none"}
               name="room"
               defaultValue={roomId ?? ""}
-              className={fieldClass}
+              className={selectClass}
             >
               <option value="">選んでください</option>
               {rooms.map((item) => (
@@ -126,6 +121,6 @@ export function ReservationFormView({
         mode={mode}
         homeroomNotes={homeroomNotes}
       />
-    </>
+    </div>
   );
 }

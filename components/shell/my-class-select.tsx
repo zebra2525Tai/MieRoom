@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
-import { filterFieldClass } from "@/components/ui/form";
+import { filterSelectClass } from "@/components/ui/form";
 
 // 自分のクラス (外部設計書 R6-1): kept in this browser with the school year it was
 // chosen in, never on the server. The choice travels in the URL so the page can be
@@ -77,10 +77,12 @@ export function MyClassSelect({
   }, [classes, params, pathname, router, todayFiscalYear]);
 
   return (
-    <label className="flex flex-wrap items-center gap-2 text-xs text-muted">
+    // One row at every width: full width on phones (the select takes the rest of the
+    // row), a fixed 210px select from sm.
+    <label className="flex w-full items-center gap-2 whitespace-nowrap text-xs text-muted sm:w-auto">
       自分のクラス
       <select
-        className={`${filterFieldClass} min-w-[210px]`}
+        className={`${filterSelectClass} min-w-0 flex-1 sm:w-[210px] sm:flex-none`}
         value={selectedId ?? ""}
         onChange={(event) => {
           const value = event.currentTarget.value;
