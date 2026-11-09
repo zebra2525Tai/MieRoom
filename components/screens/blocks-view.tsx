@@ -56,10 +56,7 @@ export function BlocksView({
 }) {
   return (
     <div className="max-w-4xl">
-      <PageHeading
-        title="使用止め"
-        description="教室を、日付と時限の範囲で予約できなくします。どの先生でも設定・解除できます。"
-      />
+      <PageHeading title="使用止め" />
       {/* Same width as the other entry forms (S06/S12/S14); the heading and the list
           below share it, so the right edges line up. The form is staged: the room,
           then 開始 and 終了

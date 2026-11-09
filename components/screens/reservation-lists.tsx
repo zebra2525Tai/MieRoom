@@ -230,7 +230,6 @@ export function MyReservationsView({ rows }: { rows: ReservationRow[] }) {
     <>
       <PageHeading
         title="自分の予約"
-        description="申請した予約の状態を確認できます。承認待ちの間は、取り下げられます。"
         actions={
           <LinkButton variant="primary" href="/reservations/new">
             <Icon name="plus" size={16} />
@@ -440,7 +439,6 @@ export function TeacherHomeView({ rows }: { rows: ReservationRow[] }) {
     <>
       <PageHeading
         title="先生ホーム"
-        description="承認待ちの予約を、日付と最初の枠の早い順に出します。どの先生でも承認・却下できます。"
         actions={
           <>
             <LinkButton href="/teacher/reservations">予約の一覧</LinkButton>
@@ -489,7 +487,6 @@ export function TeacherReservationsView({
     <>
       <PageHeading
         title="予約の一覧"
-        description="状態・期間・教室で絞って、予約を確認・承認・取消できます。"
         actions={
           <LinkButton variant="primary" href="/teacher/reservations/new">
             <Icon name="plus" size={16} />

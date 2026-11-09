@@ -656,7 +656,6 @@ export function TimetableView({
     <>
       <PageHeading
         title="時間割"
-        description="今日・今週・月で、クラスの授業を確認できます。講師で絞ることもできます。"
         actions={
           <MyClassSelect
             classes={classes}

@@ -76,10 +76,7 @@ export function TeachersView({
 }) {
   return (
     <>
-      <PageHeading
-        title="先生一覧"
-        description="先生のいまの位置と、担当の教科・教室を確認できます。"
-      />
+      <PageHeading title="先生一覧" />
       <FilterBar>
         {/* The field takes the row and the button keeps its label on one line. */}
         <Form action={basePath} className="flex w-full items-center gap-2">

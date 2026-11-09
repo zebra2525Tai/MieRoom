@@ -53,10 +53,7 @@ export function ImportView({
 }) {
   return (
     <>
-      <PageHeading
-        title="時間割の取り込み"
-        description="担任が作った取込用CSVを、まとめて確かめてから取り込みます。"
-      />
+      <PageHeading title="時間割の取り込み" />
       <ImportPanel />
 
       <SectionHead

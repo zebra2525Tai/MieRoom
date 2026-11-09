@@ -72,14 +72,7 @@ export function ReservationFormView({
   // the labels, the slots and the submit button stay close together on wide screens.
   return (
     <div className="max-w-4xl">
-      <PageHeading
-        title={mode === "apply" ? "予約の申請" : "代理入力"}
-        description={
-          mode === "apply"
-            ? "教室・日付・枠を選んで申請します。先生が承認すると確定します。"
-            : "先生が予約を入れます。保存すると、その場で承認済みになります。"
-        }
-      />
+      <PageHeading title={mode === "apply" ? "予約の申請" : "代理入力"} />
       <NotReadyNotice>
         画面の形を確かめる段階です。予約の表ができてから、申請できるようになります。
       </NotReadyNotice>

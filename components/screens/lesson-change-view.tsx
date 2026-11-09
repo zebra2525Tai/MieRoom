@@ -110,7 +110,6 @@ export function LessonChangeView({
     <div className="max-w-6xl">
       <PageHeading
         title="授業の変更"
-        description="その日だけの変更をします。大規模な修正は、担任がツールを直して取り込み直します。"
         actions={
           <LinkButton href={backHref}>
             <Icon name="back" size={15} />
@@ -226,7 +225,6 @@ export function LessonAddView({
     <div className="max-w-4xl">
       <PageHeading
         title="授業を足す(補講)"
-        description="今日以降で、時間割が入力済みの日に足せます。"
         actions={
           <LinkButton href={backHref}>
             <Icon name="back" size={15} />

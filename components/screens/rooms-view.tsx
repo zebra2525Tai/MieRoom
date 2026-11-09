@@ -177,7 +177,6 @@ export function RoomsView({
     <>
       <PageHeading
         title="空き教室"
-        description="日付と時限を選んで、教室ごとの前半・後半の状態を確認できます。"
         actions={
           <Segmented
             label="表示方法"

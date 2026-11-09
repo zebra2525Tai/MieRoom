@@ -112,7 +112,6 @@ export function MastersView({
     <>
       <PageHeading
         title="マスタ"
-        description="クラス・講師・教科・教室を管理します。名前は、無効なものも含めて重複できません。"
         actions={
           <Button variant="primary" disabled>
             <Icon name="plus" size={16} />
@@ -310,7 +309,6 @@ export function LinksView({
     <>
       <PageHeading
         title="紐づけ"
-        description="クラスの教科と、教科の講師・教室を管理します。ツールのプルダウンの元になります。"
         actions={
           <Button variant="primary" disabled>
             <Icon name="plus" size={16} />
@@ -418,7 +416,6 @@ export function ClosuresView({
     <>
       <PageHeading
         title="休み・行事"
-        description="祝日・休校・行事を管理します。"
         actions={
           <Button variant="primary" disabled>
             <Icon name="plus" size={16} />
@@ -518,10 +515,7 @@ export function ExportView({
   const errorCount = issues.filter((issue) => issue.level === "error").length;
   return (
     <>
-      <PageHeading
-        title="CSV書き出し"
-        description="マスタ・紐づけ・休み・行事を、8つのCSVにしてZIPで書き出します。担任のツールに取り込むファイルです。"
-      />
+      <PageHeading title="CSV書き出し" />
       <Callout kind="neutral">
         範囲: {yearLabel}
         に存在する有効なクラス、有効なマスタ。休み・行事は今年度と翌4/1〜4/11。
@@ -675,10 +669,7 @@ export function AccessView({
 }) {
   return (
     <>
-      <PageHeading
-        title="タグ・受信機"
-        description="講師のタグIDと、教室の受信機IDを管理します。時間割管理者は、環境変数で決めます。"
-      />
+      <PageHeading title="タグ・受信機" />
       <Callout kind="neutral">{READ_ONLY_NOTE}</Callout>
       <SectionHead
         title="受信機"
@@ -742,10 +733,7 @@ export function AccessView({
 export function DeleteView() {
   return (
     <>
-      <PageHeading
-        title="削除管理"
-        description="無効にしたマスタのうち、使われていないものを削除します。5分以内にログインし直していることが必要です。"
-      />
+      <PageHeading title="削除管理" />
       <NotReadyNotice>
         画面の形を確かめる段階です。削除の判定は、授業・予約の表ができてから作ります。
       </NotReadyNotice>
@@ -762,7 +750,6 @@ export function MonitorsView() {
     <>
       <PageHeading
         title="モニターURL"
-        description="モニターに表示する、合言葉つきのURLを管理します。"
         actions={
           <Button variant="primary" disabled>
             <Icon name="plus" size={16} />
