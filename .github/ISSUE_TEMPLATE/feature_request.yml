@@ -1,0 +1,57 @@
+name: 改善の提案
+description: 「こうしたらもっと使いやすい」というアイデア(コードは書かなくて構いません)
+title: "[提案] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        使ってみて気づいたことや、アイデアを書いてください。仕様の細かい書き方は不要です。
+        **本物の個人情報・パスワードは書かない・写さない**でください。
+        バグ(仕様と違う動き)は、「不具合の報告」に書いてください。
+  - type: textarea
+    id: problem
+    attributes:
+      label: 困っていること・気づいたこと
+      description: いまの使いにくさや、足りないと感じたこと
+      placeholder: 例) 先生が承認待ちの申請を、まとめて承認できない
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: 提案(こうなるとよい)
+      description: 思いつく範囲で構いません
+    validations:
+      required: true
+  - type: dropdown
+    id: role
+    attributes:
+      label: 主に使う人
+      options:
+        - 学生
+        - 先生
+        - 時間割管理者
+        - 全員
+    validations:
+      required: true
+  - type: input
+    id: screen
+    attributes:
+      label: 関係する画面
+      description: 画面の名前、またはアドレスの末尾(例 予約の一覧、/teacher/reservations)
+  - type: dropdown
+    id: priority
+    attributes:
+      label: あなたから見た優先度
+      options:
+        - 高(ないと困る)
+        - 中(あると助かる)
+        - 低(あれば嬉しい)
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: 補足・画面の写真
+      description: 画像をここに貼れます。個人情報やパスワードが写っていないか確かめてください

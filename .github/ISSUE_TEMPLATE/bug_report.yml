@@ -1,0 +1,96 @@
+name: 不具合の報告
+description: テストで見つけた、仕様と違う動き(テスト担当用)
+title: "[不具合] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        見つけた不具合を 1 つだけ書いてください。**本物の個人情報・パスワードは書かない・写さない**でください。
+        迷ったら、迷ったまま報告して構いません(「仕様では?」と書き添えてください)。
+  - type: input
+    id: case
+    attributes:
+      label: ケース ID
+      description: チェックシートの ID(例 T-SC-001)。チェックシートにない場合は「なし」
+      placeholder: T-SC-001
+    validations:
+      required: true
+  - type: dropdown
+    id: role
+    attributes:
+      label: ログインした役割
+      options:
+        - 学生
+        - 先生
+        - 時間割管理者
+        - ログインなし
+    validations:
+      required: true
+  - type: input
+    id: screen
+    attributes:
+      label: 発生した画面
+      description: 画面の名前、またはアドレスの末尾(例 予約する、/reservations/new)
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 手順
+      description: 他の人が同じ不具合を起こせるように、1 つずつ書いてください
+      placeholder: |
+        1. 学生でログインする
+        2. 「空き教室」で、展示室を選ぶ
+        3. …
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期待結果
+      description: 仕様では、どうなるはずか(チェックシートの「期待結果」)
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: 実際の結果
+      description: 実際に起きたこと。画面に出た文言は、そのまま書いてください
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: 重大度
+      description: 重大=データが壊れる・権限のない人が操作できる・全員が使えない / 高=主要な流れが止まる / 中=回避すれば使える / 低=文言・見た目
+      options:
+        - 重大
+        - 高
+        - 中
+        - 低
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: 環境
+      description: ブラウザの名前と版、実施した日時
+      placeholder: Chrome 125、2026-11-10 15:30
+    validations:
+      required: true
+  - type: dropdown
+    id: frequency
+    attributes:
+      label: 起きる頻度
+      options:
+        - 毎回
+        - ときどき(回数を「補足」に書く)
+        - 1 回だけ
+    validations:
+      required: true
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: 画面の写真・補足
+      description: 画像をここに貼れます。個人情報やパスワードが写っていないか確かめてください
