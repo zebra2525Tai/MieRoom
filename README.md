@@ -34,6 +34,7 @@ npm run dev
 | `npm run typecheck`        | 型チェック(`next typegen` のあと `tsc --noEmit`)                   |
 | `npm test`                 | Vitest(時刻は UTC で動く)                                          |
 | `npm run test:integration` | 結合テスト(本物の PostgreSQL。下の「結合テスト」)                  |
+| `npm run docs:build`       | 提出用の Word 書類 8 点を作る(下の「提出書類」)                    |
 | `npm run db:push`          | 表を開発用DBに作る(バック担当だけ。`DATABASE_URL_UNPOOLED` が要る) |
 | `npm run db:seed`          | 最初の許可リストなどを開発用DBに入れる(下の「ログインの準備」)     |
 
@@ -50,6 +51,21 @@ npm run dev
 5. Prisma が「AI から実行された」と止めたら、自分のターミナルで実行する。
 
 接続文字列は、チャットや Git に貼らない。
+
+## 提出書類
+
+提出用の Word 書類(MR-00〜MR-07)は、このリポジトリの今の状態から作り直せる(`scripts/docs/`)。単体テストの件数、Git の履歴、メッセージ一覧、ライセンスの内訳、規模(行数・表の数)は、実行のたびに自動で集める。
+
+```
+npm run docs:build                      # submission-docs/ に作る(Git には入らない)
+npm run docs:build -- --out <フォルダ>  # 出力先を指定する
+npm run docs:build -- --skip-tests      # 単体テストを走らせず、前回の結果を使う
+```
+
+- 文章は `scripts/docs/doc00.cjs`〜`doc07.cjs`。文中の `{{I}}` などは、集めた数字に置き換わる(知らない名前だとエラーで止まる)。
+- 自動で数えられない値(結合テストの件数、設計したケースの件数、チェックシートの件数)は `scripts/docs/facts.json` を直す。
+- 単体テストに失敗があると、書類が「すべて合格」と書くため、作らずに止まる。
+- 表紙の作成者・所属、操作マニュアルの画面写真、07 の所感は、Word で人が書く。
 
 ## ログインの準備(開発用)
 

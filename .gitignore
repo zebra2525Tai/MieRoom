@@ -46,3 +46,7 @@ next-env.d.ts
 
 # 資料置き場(GitHub に上げない)
 /document/
+
+# 提出用の Word 書類の作成物と、集めた数字の置き場
+/submission-docs/
+/.docs-cache/

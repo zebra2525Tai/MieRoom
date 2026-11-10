@@ -19,7 +19,8 @@
     "db:push": "prisma db push",
     "db:seed": "tsx --env-file-if-exists=.env.local scripts/seed.ts",
     "db:import-masters": "tsx --env-file-if-exists=.env.local scripts/import-masters.ts",
-    "demo-data": "tsx scripts/demo-data/generate.ts"
+    "demo-data": "tsx scripts/demo-data/generate.ts",
+    "docs:build": "node scripts/docs/build.cjs"
   },
   "dependencies": {
     "@date-fns/tz": "1.5.0",
@@ -43,6 +44,7 @@
     "@types/pg": "8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "docx": "9.15.3",
     "eslint": "^9",
     "eslint-config-next": "16.4.3",
     "eslint-config-prettier": "^10.1.8",

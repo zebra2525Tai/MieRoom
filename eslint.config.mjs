@@ -8,6 +8,14 @@ const eslintConfig = defineConfig([
   ...nextTs,
   // Turn off rules that conflict with Prettier.
   prettier,
+  // 提出書類を作るスクリプト(CommonJS)。require を使い、書類ごとに使わない部品もある。
+  {
+    files: ["scripts/docs/**/*.cjs"],
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
+      "@typescript-eslint/no-unused-vars": "off",
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

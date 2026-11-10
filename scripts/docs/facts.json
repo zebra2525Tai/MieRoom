@@ -1,0 +1,6 @@
+{
+  "_comment": "自動では数えられない値。テストや設計を変えたら、ここを直してから npm run docs:build する。",
+  "integrationTests": 91,
+  "designedCases": 290,
+  "checksheet": 29
+}
