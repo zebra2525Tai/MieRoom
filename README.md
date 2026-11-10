@@ -25,18 +25,31 @@ npm run dev
 
 ## コマンド
 
-| コマンド            | 内容                                                               |
-| ------------------- | ------------------------------------------------------------------ |
-| `npm run dev`       | 開発サーバー                                                       |
-| `npm run build`     | 本番のビルド                                                       |
-| `npm run lint`      | ESLint                                                             |
-| `npm run format`    | Prettier で整える(`format:check` は確かめるだけ)                   |
-| `npm run typecheck` | 型チェック(`next typegen` のあと `tsc --noEmit`)                   |
-| `npm test`          | Vitest(時刻は UTC で動く)                                          |
-| `npm run db:push`   | 表を開発用DBに作る(バック担当だけ。`DATABASE_URL_UNPOOLED` が要る) |
-| `npm run db:seed`   | 最初の許可リストなどを開発用DBに入れる(下の「ログインの準備」)     |
+| コマンド                   | 内容                                                               |
+| -------------------------- | ------------------------------------------------------------------ |
+| `npm run dev`              | 開発サーバー                                                       |
+| `npm run build`            | 本番のビルド                                                       |
+| `npm run lint`             | ESLint                                                             |
+| `npm run format`           | Prettier で整える(`format:check` は確かめるだけ)                   |
+| `npm run typecheck`        | 型チェック(`next typegen` のあと `tsc --noEmit`)                   |
+| `npm test`                 | Vitest(時刻は UTC で動く)                                          |
+| `npm run test:integration` | 結合テスト(本物の PostgreSQL。下の「結合テスト」)                  |
+| `npm run db:push`          | 表を開発用DBに作る(バック担当だけ。`DATABASE_URL_UNPOOLED` が要る) |
+| `npm run db:seed`          | 最初の許可リストなどを開発用DBに入れる(下の「ログインの準備」)     |
 
-プルリクエストのたびに、GitHub Actions が `format:check`・`lint`・`typecheck`・`test`・`build` を走らせる。
+プルリクエストのたびに、GitHub Actions が `format:check`・`lint`・`typecheck`・`test`・`build`(`check` ジョブ)と、結合テスト(`integration` ジョブ)を走らせる。
+
+## 結合テスト
+
+入り口から DB までを、本物の PostgreSQL で確かめる(ファイルは `tests/integration/*.it.ts`。`npm test` には含まれない)。CI では、使い捨ての PostgreSQL で自動で動く。
+
+1. テスト用の DB を用意する。名前が `_test` で終わるデータベース(例: Neon の `mieroom_test`)か、手元の PostgreSQL。**テストは、毎回、全テーブルを空にする**ので、アプリの DB(`DATABASE_URL`)は、絶対に使わない。
+2. リポジトリ直下に `.env.integration` を作り、`TEST_DATABASE_URL=（直接の接続文字列）` を 1 行入れる(Git には入らない)。
+3. 自分のターミナルで `npm run test:integration` を実行する(Windows の PowerShell で「スクリプトの実行が無効」と出たら、`npm.cmd run test:integration`)。約 1 分。
+4. 接続先が未設定、名前が `_test` で終わらない、アプリの DB と同じ場所のときは、何も消さずに止まる(正しい動き)。
+5. Prisma が「AI から実行された」と止めたら、自分のターミナルで実行する。
+
+接続文字列は、チャットや Git に貼らない。
 
 ## ログインの準備(開発用)
 
