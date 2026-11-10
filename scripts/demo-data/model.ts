@@ -785,7 +785,7 @@ const README = `# 架空のマスタと時間割(デモ用)
 - どのクラスも、平日は授業か休み・行事の名称が入っています(ME412 にならない)。
 - 青(例外)になるデータを、クラス・月ごとに1つ入れています: 紐づけにない代理の講師、紐づけにない空き教室、教室未定。
 - 2026-12-09 の防災訓練は、授業もある行事の日です(授業と休み・行事の両方の行が出ます)。
-- 2026-11-20 の校外学習は、1年のクラスだけの行事です(CSV-08 の対象クラスに入っています)。
+- 2026-11-20 の校外学習は、1年のクラスだけの行事です(ツールが各クラスの時間割 CSV に出す行だけに入れています。マスタの「休み・行事」には入れません。システムとツールの両方に入れると、取り込みで重複するためです)。
 `;
 
 export function buildFiles(): Map<string, string> {
@@ -849,11 +849,13 @@ export function buildFiles(): Map<string, string> {
     "master/休み・行事.csv",
     writeCsv(
       ["開始日", "終了日", "名称", "対象クラス"],
-      EVENTS.map((event) => [
+      // The master has the school-wide closures only. A class's own event (校外学習) is put in
+      // by the tool, in the class's timetable file: both would be saved twice (14-15 #11).
+      EVENTS.filter((event) => event.className === null).map((event) => [
         event.start,
         event.end ?? "",
         event.name,
-        event.className ?? "",
+        "",
       ]),
     ),
   );
