@@ -1,6 +1,10 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { MESSAGES, SYSTEM_ERROR_MESSAGE } from "@/lib/messages";
+import {
+  LOGIN_ERROR_MESSAGES,
+  MESSAGES,
+  SYSTEM_ERROR_MESSAGE,
+} from "@/lib/messages";
 
 // The three routes of S20 (check, apply, unlock): who may call them and what comes back.
 // The session and the import are replaced; the rest is the real route code.
@@ -104,7 +108,10 @@ describe.each([
         await upload(url, csvForm("a.csv"), headers),
       );
       expect(response.status, `${role}`).toBe(status);
-      expect(await response.json()).toEqual({ message: MESSAGES.ME004 });
+      // Not signed in: "sign in again" (ME005). Every other refusal: no permission (ME004).
+      expect(await response.json()).toEqual({
+        message: status === 401 ? LOGIN_ERROR_MESSAGES.ME005 : MESSAGES.ME004,
+      });
     }
     expect(work()).not.toHaveBeenCalled();
   });
@@ -220,6 +227,9 @@ describe("POST /admin/import/unlock", () => {
         await request({ classId: CLASS_ID, month: "2026-11" }, headers),
       );
       expect(response.status, `${role}`).toBe(status);
+      expect(await response.json()).toEqual({
+        message: status === 401 ? LOGIN_ERROR_MESSAGES.ME005 : MESSAGES.ME004,
+      });
     }
     expect(mocks.unlockException).not.toHaveBeenCalled();
   });

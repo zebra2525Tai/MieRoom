@@ -1,6 +1,10 @@
 import type { NextRequest } from "next/server";
 import { z } from "zod";
-import { MESSAGES, SYSTEM_ERROR_MESSAGE } from "@/lib/messages";
+import {
+  LOGIN_ERROR_MESSAGES,
+  MESSAGES,
+  SYSTEM_ERROR_MESSAGE,
+} from "@/lib/messages";
 import { MAX_FILES, MAX_TOTAL_BYTES } from "@/lib/domain/timetable-import";
 import { fromThisSite } from "./same-site";
 import { getCurrentUser, hasRole } from "./session";
@@ -22,7 +26,10 @@ export async function refuseUnlessAdmin(
 ): Promise<Response | null> {
   if (!fromThisSite(request)) return json(403, { message: MESSAGES.ME004 });
   const user = await getCurrentUser();
-  if (user === null) return json(401, { message: MESSAGES.ME004 });
+  // Signed out (or the session has run out): say so, so that the person signs in again (ME005).
+  if (user === null) {
+    return json(401, { message: LOGIN_ERROR_MESSAGES.ME005 });
+  }
   if (!hasRole(user, "admin")) return json(403, { message: MESSAGES.ME004 });
   return null;
 }

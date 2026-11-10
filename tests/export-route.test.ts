@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { unzipSync } from "fflate";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MASTER_FILES } from "@/lib/domain/master-csv";
-import { SYSTEM_ERROR_MESSAGE } from "@/lib/messages";
+import { LOGIN_ERROR_MESSAGES, SYSTEM_ERROR_MESSAGE } from "@/lib/messages";
 import { demoSource } from "./support/master-source";
 
 // The download of S24 (POST /admin/export/download): who may call it, and what comes back.
@@ -83,7 +83,10 @@ describe("POST /admin/export/download", () => {
 
   it("ログインしていなければ 401。DB は読まない", async () => {
     mocks.getCurrentUser.mockResolvedValue(null);
-    expect((await POST(request())).status).toBe(401);
+    const response = await POST(request());
+    expect(response.status).toBe(401);
+    // Signed out or the session has run out: "sign in again" (ME005), not "no permission".
+    expect(await response.text()).toBe(LOGIN_ERROR_MESSAGES.ME005);
     expect(mocks.loadExportSource).not.toHaveBeenCalled();
   });
 

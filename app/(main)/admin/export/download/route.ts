@@ -6,7 +6,11 @@ import {
   masterZipName,
 } from "@/lib/domain/master-zip";
 import { fiscalYearOfDate, schoolToday } from "@/lib/domain/school-date";
-import { MESSAGES, SYSTEM_ERROR_MESSAGE } from "@/lib/messages";
+import {
+  LOGIN_ERROR_MESSAGES,
+  MESSAGES,
+  SYSTEM_ERROR_MESSAGE,
+} from "@/lib/messages";
 import { loadExportSource } from "@/lib/server/queries/export";
 import { fromThisSite } from "@/lib/server/same-site";
 import { getCurrentUser, hasRole } from "@/lib/server/session";
@@ -29,7 +33,7 @@ export async function POST(request: NextRequest): Promise<Response> {
   if (!fromThisSite(request)) return text(403, MESSAGES.ME004);
 
   const user = await getCurrentUser();
-  if (user === null) return text(401, MESSAGES.ME004);
+  if (user === null) return text(401, LOGIN_ERROR_MESSAGES.ME005);
   if (!hasRole(user, "admin")) return text(403, MESSAGES.ME004);
 
   try {
