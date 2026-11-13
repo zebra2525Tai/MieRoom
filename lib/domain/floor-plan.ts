@@ -283,8 +283,8 @@ export const FLOORS: readonly Floor[] = [
         ],
         kind: "green",
       },
-      { name: "", points: rect(328, 0, 52, 100), kind: "fac" },
-      { name: "", points: rect(386, 0, 52, 100), kind: "fac" },
+      { name: "", points: rect(328, 0, 55, 100), kind: "fac" },
+      { name: "", points: rect(383, 0, 55, 100), kind: "fac" },
       { name: "EV", points: rect(150, 262, 28, 28), kind: "fac", small: true },
       {
         name: "階段",
