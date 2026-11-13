@@ -284,6 +284,22 @@ describe("フロアマップの図", () => {
     }
   });
 
+  it("3〜6階の ○01・○02・○03 の教室は、高さの真ん中での幅が同じ", () => {
+    for (const id of ["6F", "5F", "4F", "3F"]) {
+      const floor = FLOORS.find((item) => item.id === id)!;
+      const widths = floor.rooms
+        .filter((room) => /^[3-6]0[123]$/.test(room.name))
+        .map((room) => {
+          const [left, right] = extentAt(room.points, 50);
+          return right - left;
+        });
+      expect(widths, id).toHaveLength(3);
+      for (const width of widths) {
+        expect(width, id).toBeCloseTo(widths[0], 0);
+      }
+    }
+  });
+
   it("図の中に、図形でない・つぶれた部屋がない", () => {
     for (const room of rooms) {
       expect(room.points.length, room.name).toBeGreaterThanOrEqual(4);
