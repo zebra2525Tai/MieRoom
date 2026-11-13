@@ -104,7 +104,7 @@ export const FLOORS: readonly Floor[] = [
     rooms: [
       { name: "603", points: slantTop(173), kind: "room" },
       { name: "602", points: rect(173, 0, 130, 100), kind: "room" },
-      { name: "601", points: rect(303, 0, 133, 100), kind: "room" },
+      { name: "601", points: rect(303, 0, 169, 100), kind: "room" },
       emerg,
       { name: "604", points: lower, kind: "room" },
       { name: "倉庫", points: rect(173, 125, 85, 70), kind: "fac" },
@@ -120,10 +120,10 @@ export const FLOORS: readonly Floor[] = [
     rooms: [
       { name: "503", points: slantTop(173), kind: "room" },
       { name: "502", points: rect(173, 0, 130, 100), kind: "room" },
-      { name: "501", points: rect(303, 0, 133, 100), kind: "room" },
+      { name: "501", points: rect(303, 0, 169, 100), kind: "room" },
       {
         name: "倉庫",
-        points: rect(390, 100, 46, 16),
+        points: rect(396, 100, 46, 16),
         kind: "fac",
         small: true,
         attachTop: true,
@@ -143,7 +143,7 @@ export const FLOORS: readonly Floor[] = [
     rooms: [
       { name: "403", points: slantTop(173), kind: "room" },
       { name: "402", points: rect(173, 0, 130, 100), kind: "room" },
-      { name: "401", points: rect(303, 0, 133, 100), kind: "room" },
+      { name: "401", points: rect(303, 0, 169, 100), kind: "room" },
       emerg,
       { name: "学生ホール", points: lower, kind: "green" },
       ...common,
@@ -168,7 +168,7 @@ export const FLOORS: readonly Floor[] = [
         kind: "room",
       },
       { name: "302", points: rect(173, 0, 130, 100), kind: "room" },
-      { name: "301", points: rect(303, 0, 133, 100), kind: "room" },
+      { name: "301", points: rect(303, 0, 169, 100), kind: "room" },
       emerg,
       { name: "305", points: rect(173, 125, 85, 70), kind: "room" },
       { name: "304", points: lower, kind: "room" },
