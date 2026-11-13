@@ -24,58 +24,58 @@ export type HomeLessons =
   | { kind: "undecided" }
   | { kind: "ready"; current: LessonView | null; next: LessonView | null };
 
-function NextLessonCard({
+/** The large card: the lesson running now, with its room shown big. */
+function CurrentLessonCard({
+  className = "",
   selected,
   lessons,
-  today,
   timetableHref,
 }: {
+  /** Grid placement only. */
+  className?: string;
   selected: boolean;
   lessons: HomeLessons;
-  today: string;
   timetableHref: string;
 }) {
-  const next = lessons.kind === "ready" ? lessons.next : null;
+  const current = lessons.kind === "ready" ? lessons.current : null;
   // Card's look with its own tint and border (not Card + className: overriding
   // Card's bg-white and border color would depend on the CSS order).
   return (
-    <div className="rounded-card border border-[#cfd7ff] bg-[#f2f5ff] p-6 shadow-card">
-      <CardLabel icon="calendar">次の授業</CardLabel>
+    <div
+      className={`rounded-card border border-[#cfd7ff] bg-[#f2f5ff] p-6 shadow-card ${className}`}
+    >
+      <CardLabel icon="calendar">いまの授業</CardLabel>
       {!selected ? (
         <h2 className="mb-6 mt-5 text-[19px] font-bold">
-          クラスを選ぶと、次の授業が出ます
+          クラスを選ぶと、いまの授業が出ます
         </h2>
-      ) : next ? (
+      ) : lessons.kind === "undecided" ? (
+        <div className="mb-5 mt-3 text-[44px] font-bold leading-tight text-navy sm:text-[52px]">
+          未定
+        </div>
+      ) : current ? (
         <div className="mt-3">
           <div className="text-[44px] font-bold leading-tight tracking-tight text-navy sm:text-[52px]">
-            {roomText(next.room)}
-            {next.room && (
+            {roomText(current.room)}
+            {current.room && (
               <span className="ml-2 text-[19px] font-semibold tracking-normal">
                 教室
               </span>
             )}
           </div>
           <div className="mt-2.5 flex flex-wrap items-center gap-2">
-            <span className="text-base font-bold">{next.subject}</span>
-            <LessonBadges lesson={next} />
+            <span className="text-base font-bold">{current.subject}</span>
+            <LessonBadges lesson={current} />
           </div>
           <div className="mb-5 mt-1.5 flex flex-wrap gap-4 text-xs text-[#586579]">
-            {next.date !== today && <span>{formatDate(next.date, today)}</span>}
             <span>
-              {periodLabel(next.periodNo)} {periodTime(next.periodNo)}
+              {periodLabel(current.periodNo)} {periodTime(current.periodNo)}
             </span>
-            <span>{teacherText(next.teachers)}</span>
+            <span>{teacherText(current.teachers)}</span>
           </div>
         </div>
       ) : (
-        <div className="mb-5 mt-3">
-          <div className="text-[44px] font-bold leading-tight text-navy sm:text-[52px]">
-            未定
-          </div>
-          <p className="mt-2 text-xs text-[#586579]">
-            入力済みの時間割の範囲で、次の授業が見つかりません。
-          </p>
-        </div>
+        <h2 className="mb-6 mt-5 text-[19px] font-bold">{MESSAGES.MI003}</h2>
       )}
       <div className="flex flex-wrap items-center gap-2">
         <LinkButton variant="primary" href={timetableHref}>
@@ -116,7 +116,7 @@ export function HomeView({
   lessons: HomeLessons;
   closures: string[];
 }) {
-  const current = lessons.kind === "ready" ? lessons.current : null;
+  const next = lessons.kind === "ready" ? lessons.next : null;
   return (
     <>
       <h1 className="sr-only">ホーム</h1>
@@ -143,17 +143,49 @@ export function HomeView({
         !selectedClassId && <Callout>{MESSAGES.MI001}</Callout>
       )}
 
-      <div className="mb-5 grid gap-5 lg:grid-cols-[minmax(0,1.6fr)_minmax(280px,1fr)]">
-        <NextLessonCard
+      {/* One grid so that, below lg, the two lessons come one after the other
+          (いま, 次, 先生の位置, 休み・行事 — also the reading order). From lg the cards
+          are placed in two rows: いま | 先生の位置, then 次 | 休み・行事. */}
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1.6fr)_minmax(280px,1fr)]">
+        <CurrentLessonCard
+          className="lg:col-start-1 lg:row-start-1"
           selected={selectedClassId !== null}
           lessons={lessons}
-          today={today}
           timetableHref={withQuery("/timetable", {
             class: selectedClassId,
             date: today,
           })}
         />
-        <Card className="flex flex-col p-6">
+        <Card className="p-6 lg:col-start-1 lg:row-start-2">
+          <h2 className="text-[17px] font-bold">次の授業</h2>
+          {!selectedClassId ? (
+            <p className="mt-2 text-xs text-muted">{MESSAGES.MI001}</p>
+          ) : lessons.kind === "undecided" ? (
+            <p className="mt-2 text-xs text-muted">未定</p>
+          ) : next ? (
+            <div className="mt-2.5">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="font-bold">{next.subject}</span>
+                <LessonBadges lesson={next} />
+              </div>
+              <div className="mt-1 flex flex-wrap gap-3 text-xs text-muted">
+                {next.date !== today && (
+                  <span>{formatDate(next.date, today)}</span>
+                )}
+                <span>
+                  {periodLabel(next.periodNo)} {periodTime(next.periodNo)}
+                </span>
+                <span>{roomText(next.room)}</span>
+                <span>{teacherText(next.teachers)}</span>
+              </div>
+            </div>
+          ) : (
+            <p className="mt-2 text-xs text-muted">
+              入力済みの時間割の範囲で、次の授業が見つかりません。
+            </p>
+          )}
+        </Card>
+        <Card className="flex flex-col p-6 lg:col-start-2 lg:row-start-1">
           <CardLabel icon="pin">先生の位置</CardLabel>
           <h2 className="mt-2 text-[17px] font-bold">先生は、どこにいる?</h2>
           <p className="mb-4 mt-1.5 text-xs text-muted">
@@ -174,35 +206,7 @@ export function HomeView({
             </LinkButton>
           </div>
         </Card>
-      </div>
-
-      {/* Same column edges as the row above from lg; side by side from md. */}
-      <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-[minmax(0,1.6fr)_minmax(280px,1fr)]">
-        <Card className="p-6">
-          <h2 className="text-[17px] font-bold">いまの授業</h2>
-          {!selectedClassId ? (
-            <p className="mt-2 text-xs text-muted">{MESSAGES.MI001}</p>
-          ) : lessons.kind === "undecided" ? (
-            <p className="mt-2 text-xs text-muted">未定</p>
-          ) : current ? (
-            <div className="mt-2.5">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="font-bold">{current.subject}</span>
-                <LessonBadges lesson={current} />
-              </div>
-              <div className="mt-1 flex flex-wrap gap-3 text-xs text-muted">
-                <span>
-                  {periodLabel(current.periodNo)} {periodTime(current.periodNo)}
-                </span>
-                <span>{roomText(current.room)}</span>
-                <span>{teacherText(current.teachers)}</span>
-              </div>
-            </div>
-          ) : (
-            <p className="mt-2 text-xs text-muted">{MESSAGES.MI003}</p>
-          )}
-        </Card>
-        <Card className="p-6">
+        <Card className="p-6 lg:col-start-2 lg:row-start-2">
           <h2 className="text-[17px] font-bold">今日の休み・行事</h2>
           {closures.length === 0 ? (
             <p className="mt-2 text-xs text-muted">ありません</p>
