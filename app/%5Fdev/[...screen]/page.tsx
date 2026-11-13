@@ -2,11 +2,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { LoginView } from "@/components/screens/login-view";
 import { MonitorView } from "@/components/screens/monitor-view";
+import { monitorChips, monitorPhase } from "@/lib/domain/monitor";
 import { AppShell } from "@/components/shell/app-shell";
 import type { Role } from "@/lib/auth/policy";
 import { formatLongDate, schoolToday } from "@/lib/domain/school-date";
 import { ROLE_LABEL } from "@/lib/nav";
 import { one } from "@/lib/url";
+import { monitorSampleStates } from "../monitor-sample";
 import { sampleFor } from "../samples";
 
 const ROLES: Role[] = ["student", "teacher", "admin"];
@@ -25,85 +27,17 @@ export default async function DevScreenPage({
     return <LoginView message={null} next="/" />;
   }
   if (screen[0] === "s30") {
+    // ?phase=break: 休み時間 (次の時限の授業を出す)。ない: 授業中。
+    const isBreak = one(query.phase) === "break";
+    const phase = monitorPhase(isBreak ? 10 * 60 + 50 : 10 * 60 + 30);
     return (
       <MonitorView
-        todayText="11/20(金)"
-        timeText="11:02"
-        updatedText="11:00"
-        classes={[
-          {
-            className: "大学併修1年",
-            dateText: null,
-            periodLabel: "3限",
-            subject: "英語A",
-            room: "201",
-          },
-          {
-            className: "大学併修2年",
-            dateText: null,
-            periodLabel: "3限",
-            subject: "データ構造",
-            room: "302",
-          },
-          {
-            className: "医療情報1年",
-            dateText: "11/24(火)",
-            periodLabel: "1限",
-            subject: "医療概論",
-            room: "202",
-          },
-          {
-            className: "医療情報2年",
-            dateText: null,
-            periodLabel: null,
-            subject: "未定",
-            room: "未定",
-          },
-          {
-            className: "ゲームITエキスパート1年",
-            dateText: null,
-            periodLabel: "4限",
-            subject: "数学基礎",
-            room: "各教室",
-          },
-          {
-            className: "システム専攻2年",
-            dateText: null,
-            periodLabel: "3限",
-            subject: "チーム開発演習",
-            room: "603",
-          },
-        ]}
-        rooms={[
-          {
-            key: "1",
-            room: "201",
-            lesson: {
-              className: "大学併修1年",
-              subject: "情報リテラシー",
-              teacher: "三和田",
-            },
-          },
-          {
-            key: "2",
-            room: "601",
-            lesson: {
-              className: "システム専攻2年",
-              subject: "サーバー構築",
-              teacher: "政宗",
-            },
-          },
-          { key: "3", room: "504", lesson: null },
-          {
-            key: "4",
-            room: "302",
-            lesson: {
-              className: "大学併修2年",
-              subject: "英語B",
-              teacher: "杉本",
-            },
-          },
-        ]}
+        chips={monitorChips(phase)}
+        states={monitorSampleStates(isBreak)}
+        dateText="11/13(金)"
+        timeText={isBreak ? "10:50" : "10:30"}
+        updatedText="10:00"
+        stale={false}
       />
     );
   }

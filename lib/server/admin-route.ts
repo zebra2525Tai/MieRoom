@@ -2,7 +2,12 @@ import type { NextRequest } from "next/server";
 import { MESSAGES, SYSTEM_ERROR_MESSAGE } from "@/lib/messages";
 import { authorize, readJson } from "./action-request";
 import { json } from "./admin-request";
-import type { AccessResult } from "./access";
+
+/** What an edit answers: done (with the notice to show), refused with a message, or gone. */
+export type AdminResult =
+  | { kind: "done"; notice: string }
+  | { kind: "invalid"; message: string }
+  | { kind: "not_found" };
 
 // The shape of every edit by a 時間割管理者 (S21〜S27): the site, the sign-in and the role are
 // checked, the body is read, the work is done, and the answer is a short message.
@@ -10,7 +15,7 @@ import type { AccessResult } from "./access";
 export async function adminPost(
   request: NextRequest,
   label: string,
-  work: (body: Record<string, unknown>) => Promise<AccessResult | Response>,
+  work: (body: Record<string, unknown>) => Promise<AdminResult | Response>,
 ): Promise<Response> {
   const allowed = await authorize(request, "admin");
   if ("refusal" in allowed) return allowed.refusal;

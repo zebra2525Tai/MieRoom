@@ -8,7 +8,6 @@ import {
   Callout,
   EmptyState,
   FilterBar,
-  NotReadyNotice,
   PageHeading,
   SectionHead,
   Segmented,
@@ -28,11 +27,18 @@ import { ClosureDeleteButton, ClosureEditButton } from "./closure-editor";
 import { DeleteButton } from "./delete-button";
 import { MasterActiveButton, MasterEditButton } from "./master-editor";
 import {
+  MonitorActiveButton,
+  MonitorAddForm,
+  MonitorRotateButton,
+  MonitorUrl,
+} from "./monitor-editors";
+import {
   ReceiverAddForm,
   ReceiverRemoveButton,
   TagEditor,
 } from "./access-editors";
 import type { RoomKind } from "@/lib/domain/room-status";
+import { schoolDateTimeText } from "@/lib/domain/school-date";
 import { MESSAGES } from "@/lib/messages";
 import { withQuery } from "@/lib/url";
 import { KIND_LABEL } from "./rooms-view";
@@ -961,25 +967,73 @@ export function DeleteView({
   );
 }
 
-// S27 モニターURL
-export function MonitorsView() {
+// S27 モニターURL: 合言葉つきの URL を作る。URL は、この画面でだけ見られる (時間割管理者だけ)。
+export function MonitorsView({
+  monitors,
+  notice,
+}: {
+  monitors: {
+    id: string;
+    name: string;
+    passphrase: string;
+    active: boolean;
+    createdAt: string;
+  }[];
+  /** MI501 など: what was just done */
+  notice?: string | null;
+}) {
   return (
     <>
-      <PageHeading
-        title="モニターURL"
-        actions={
-          <Button variant="primary" disabled>
-            <Icon name="plus" size={16} />
-            追加
-          </Button>
-        }
+      <PageHeading title="モニターURL" />
+      {notice && (
+        <Callout icon="check" className="mb-5" key={notice}>
+          {notice}
+        </Callout>
+      )}
+      <SectionHead
+        title="モニターを追加"
+        description="名前を入れると、合言葉を作って URL を出します。URL は、この画面でだけ見られます。漏れたときは、「合言葉を変える」で、古い URL をすぐに使えなくします。"
       />
-      <NotReadyNotice>
-        画面の形を確かめる段階です。モニターの表ができてから、追加できるようになります。
-      </NotReadyNotice>
-      <EmptyState title="モニターURLはありません">
-        URLは、この画面でだけ見られます。合言葉を変えると、古いURLはすぐに使えなくなります。
-      </EmptyState>
+      <MonitorAddForm />
+      {monitors.length === 0 ? (
+        <EmptyState title="モニターURLはありません">
+          名前を入れて追加すると、URL が出ます。
+        </EmptyState>
+      ) : (
+        <TableWrap>
+          <thead>
+            <tr>
+              <Th>名前</Th>
+              <Th>URL</Th>
+              <Th>状態</Th>
+              <Th>作成日時</Th>
+              <Th>操作</Th>
+            </tr>
+          </thead>
+          <tbody>
+            {monitors.map((row) => (
+              <tr key={row.id}>
+                <Td>
+                  <strong>{row.name}</strong>
+                </Td>
+                <Td>
+                  <MonitorUrl passphrase={row.passphrase} />
+                </Td>
+                <Td>
+                  <ActiveBadge active={row.active} />
+                </Td>
+                <Td>{schoolDateTimeText(new Date(row.createdAt))}</Td>
+                <Td>
+                  <span className="inline-flex flex-wrap gap-2">
+                    <MonitorRotateButton id={row.id} />
+                    <MonitorActiveButton id={row.id} active={row.active} />
+                  </span>
+                </Td>
+              </tr>
+            ))}
+          </tbody>
+        </TableWrap>
+      )}
     </>
   );
 }

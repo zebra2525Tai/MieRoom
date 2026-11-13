@@ -913,7 +913,29 @@ export function sampleFor(
         ),
       };
     case "s27":
-      return { menuId: "s27", element: <MonitorsView /> };
+      return {
+        menuId: "s27",
+        element: (
+          <MonitorsView
+            monitors={[
+              {
+                id: "m1",
+                name: "1階の玄関",
+                passphrase: "SAMPLE-not-a-real-passphrase-0000000",
+                active: true,
+                createdAt: "2026-11-13T01:00:00.000Z",
+              },
+              {
+                id: "m2",
+                name: "職員室",
+                passphrase: "SAMPLE-not-a-real-passphrase-1111111",
+                active: false,
+                createdAt: "2026-11-13T02:00:00.000Z",
+              },
+            ]}
+          />
+        ),
+      };
     default:
       return null;
   }

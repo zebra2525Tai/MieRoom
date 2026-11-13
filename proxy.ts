@@ -18,6 +18,7 @@ const PUBLIC_PREFIXES = [
   "/login",
   "/api/auth",
   "/monitor",
+  "/api/monitor",
   "/api/gateway",
   "/api/cron",
   "/_dev",

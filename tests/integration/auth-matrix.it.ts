@@ -45,6 +45,9 @@ import { POST as accessTag } from "@/app/(main)/admin/access/tag/route";
 import { POST as accessReceiver } from "@/app/(main)/admin/access/receiver/route";
 import { POST as accessReceiverRemove } from "@/app/(main)/admin/access/receiver/remove/route";
 import { POST as deleteRun } from "@/app/(main)/admin/delete/run/route";
+import { POST as monitorAdd } from "@/app/(main)/admin/monitors/add/route";
+import { POST as monitorRotate } from "@/app/(main)/admin/monitors/rotate/route";
+import { POST as monitorActive } from "@/app/(main)/admin/monitors/active/route";
 
 type Handler = (request: NextRequest) => Promise<Response>;
 type Need = "student" | "teacher" | "admin";
@@ -72,6 +75,9 @@ const ROUTES: [string, Need, Handler][] = [
   ["/admin/access/receiver", "admin", accessReceiver],
   ["/admin/access/receiver/remove", "admin", accessReceiverRemove],
   ["/admin/delete/run", "admin", deleteRun],
+  ["/admin/monitors/add", "admin", monitorAdd],
+  ["/admin/monitors/rotate", "admin", monitorRotate],
+  ["/admin/monitors/active", "admin", monitorActive],
 ];
 
 const HOST = "mieroom.example";

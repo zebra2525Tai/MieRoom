@@ -1,7 +1,7 @@
 // Prisma 7. Connection URLs live in prisma.config.ts (CLI) and lib/server/db.ts (app).
 //
 // The login tables and the master tables (外部設計書 11章 E02〜E09, E13) exist so far.
-// Lessons, reservations, locations and the monitor tables follow in their own steps.
+// The monitor table (E18) is at the end of this file.
 // Better Auth tables follow the shape Better Auth 1.7.14 expects (checked with getAuthTables).
 
 generator client {
@@ -457,4 +457,18 @@ model RoomBlock {
 
   @@index([roomId, endDate])
   @@map("room_blocks")
+}
+
+// E18 モニターの合言葉 (S27)。URL に入れて使う (/monitor/<合言葉>)。32文字以上の推測できない値で、
+// サーバーが作る。S27 で URL を何度でも見られる仕様なので、ハッシュにせず、そのまま持つ
+// (DB の接続情報が漏れたら、合言葉も漏れる。モニターは次の授業と教室の使用状況だけを出す)。
+// 無効にした合言葉の URL は「URLが無効です」(S91) になる。
+model Monitor {
+  id         String   @id @default(uuid()) @db.Uuid
+  name       String   @db.VarChar(20)
+  passphrase String   @unique @db.VarChar(64)
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  @@map("monitors")
 }

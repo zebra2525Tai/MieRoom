@@ -44,6 +44,7 @@ describe("proxy without a session", () => {
       "/api/auth/sign-in/social",
       "/api/gateway/location-events",
       "/monitor/abc",
+      "/api/monitor/abc",
       "/robots.txt",
     ]) {
       const response = call(path, { method: "POST" });

@@ -9,7 +9,7 @@ import { MESSAGES, SYSTEM_ERROR_MESSAGE } from "@/lib/messages";
 // S25: the editing parts. The server checks every value again (and the database refuses a
 // duplicate), so the messages shown here are the server's.
 
-async function send(
+export async function send(
   endpoint: string,
   body: unknown,
 ): Promise<{ ok: boolean; notice: string | null; message: string | null }> {
@@ -40,7 +40,7 @@ async function send(
 }
 
 /** Shows what was done (MI501) on this screen and reads the lists again. */
-function useDone() {
+export function useDone() {
   const router = useRouter();
   const pathname = usePathname();
   const search = useSearchParams();
