@@ -55,8 +55,8 @@ const slantTop = (w: number): Pt[] => [
 ];
 const lower: Pt[] = [
   [30.2, 125],
-  [168, 125],
-  [168, 290],
+  [173, 125],
+  [173, 290],
   [70, 290],
 ];
 const OUTLINE: Pt[] = [
@@ -184,8 +184,8 @@ export const FLOORS: readonly Floor[] = [
         points: [
           [0, 0],
           [178, 0],
-          [178, 88],
-          [21, 88],
+          [178, 92],
+          [22.2, 92],
         ],
         kind: "room",
       },
@@ -213,7 +213,7 @@ export const FLOORS: readonly Floor[] = [
       {
         name: "203",
         points: [
-          [23, 92],
+          [22.2, 92],
           [178, 92],
           [178, 184],
           [44.5, 184],

@@ -68,6 +68,9 @@ const TOILET = {
   a: { fill: "#daf3e3", stroke: "#4aa36d", ink: "#1b7f4b" },
 };
 
+// 縦書きの文字の大きさ: [ふつう, 非常階段]
+const VERTICAL_SIZE = [14, 16] as const;
+
 const scaled = (points: readonly Pt[]): Pt[] =>
   points.map(([x, y]) => [x * SCALE, y * SCALE] as const);
 const pointsText = (points: readonly Pt[]) =>
@@ -290,16 +293,24 @@ function PlainRoom({ room }: { room: PlanRoom }) {
       />
       {room.name !== "" &&
         (room.vertical ? (
-          <text
-            transform={`translate(${cx.toFixed(1)},${cy.toFixed(1)}) rotate(90)`}
-            textAnchor="middle"
-            dominantBaseline="central"
-            fontSize={room.kind === "emerg" ? 15 : 13}
-            fontWeight={700}
-            fill={style.text}
-          >
-            {room.name}
-          </text>
+          // 縦書き: 文字を立てたまま、上から下へ 1 文字ずつ並べる
+          [...room.name].map((char, i, all) => (
+            <Text
+              key={i}
+              x={cx}
+              y={
+                cy +
+                (i - (all.length - 1) / 2) *
+                  VERTICAL_SIZE[room.kind === "emerg" ? 1 : 0] *
+                  1.15
+              }
+              size={VERTICAL_SIZE[room.kind === "emerg" ? 1 : 0]}
+              fill={style.text}
+              bold
+            >
+              {char}
+            </Text>
+          ))
         ) : (
           <Text x={cx} y={cy} size={size} fill={style.text} bold>
             {room.name}
