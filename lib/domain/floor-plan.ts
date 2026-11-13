@@ -100,7 +100,7 @@ export const FLOORS: readonly Floor[] = [
     color: "#6a3fb5",
     outline: OUTLINE,
     rooms: [
-      { name: "603", points: slantTop(168), kind: "room" },
+      { name: "603", points: slantTop(173), kind: "room" },
       { name: "602", points: rect(173, 0, 130, 100), kind: "room" },
       { name: "601", points: rect(303, 0, 133, 100), kind: "room" },
       emerg,
@@ -116,7 +116,7 @@ export const FLOORS: readonly Floor[] = [
     color: "#b0356d",
     outline: OUTLINE,
     rooms: [
-      { name: "503", points: slantTop(168), kind: "room" },
+      { name: "503", points: slantTop(173), kind: "room" },
       { name: "502", points: rect(173, 0, 130, 100), kind: "room" },
       { name: "501", points: rect(303, 0, 133, 100), kind: "room" },
       {
@@ -138,7 +138,7 @@ export const FLOORS: readonly Floor[] = [
     color: "#a9590f",
     outline: OUTLINE,
     rooms: [
-      { name: "403", points: slantTop(168), kind: "room" },
+      { name: "403", points: slantTop(173), kind: "room" },
       { name: "402", points: rect(173, 0, 130, 100), kind: "room" },
       { name: "401", points: rect(303, 0, 133, 100), kind: "room" },
       emerg,
@@ -158,8 +158,8 @@ export const FLOORS: readonly Floor[] = [
         name: "303",
         points: [
           [0, 0],
-          [168, 0],
-          [168, 100],
+          [173, 0],
+          [173, 100],
           [24.1, 100],
         ],
         kind: "room",
