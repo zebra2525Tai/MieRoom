@@ -82,10 +82,10 @@ const OUTLINE_1F: Pt[] = [
 
 const common: PlanRoom[] = [
   // EV は階段と 1 つにつながる (階段を先に描き、EV を後から重ねて、境目の線を消す)
-  { name: "階段", points: rect(205, 238, 38, 52), kind: "fac", small: true },
+  { name: "階段", points: rect(230, 238, 38, 52), kind: "fac", small: true },
   {
     name: "EV",
-    points: rect(181, 262, 24, 28),
+    points: rect(206, 262, 24, 28),
     kind: "fac",
     small: true,
     mergeRight: true,
