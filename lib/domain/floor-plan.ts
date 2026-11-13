@@ -255,7 +255,7 @@ export const FLOORS: readonly Floor[] = [
       emerg,
       {
         name: "受付",
-        points: rect(286, 148, 20, 142),
+        points: rect(286, 148, 20, 90),
         kind: "office",
         small: true,
         vertical: true,
@@ -285,14 +285,14 @@ export const FLOORS: readonly Floor[] = [
       },
       { name: "", points: rect(328, 0, 55, 100), kind: "fac" },
       { name: "", points: rect(383, 0, 55, 100), kind: "fac" },
-      { name: "EV", points: rect(150, 262, 28, 28), kind: "fac", small: true },
+      { name: "EV", points: rect(208, 262, 24, 28), kind: "fac", small: true },
       {
         name: "階段",
-        points: rect(222, 238, 38, 52),
+        points: rect(268, 238, 38, 52),
         kind: "fac",
         small: true,
       },
-      { name: "WC", points: rect(182, 238, 36, 52), kind: "fac" },
+      { name: "WC", points: rect(232, 238, 36, 52), kind: "fac" },
     ],
   },
 ];
