@@ -215,9 +215,9 @@ export const FLOORS: readonly Floor[] = [
       {
         name: "理事長室",
         points: [
-          [46, 190],
-          [163, 190],
-          [163, 290],
+          [44.5, 184],
+          [173, 184],
+          [173, 290],
           [70, 290],
         ],
         kind: "office",
@@ -267,7 +267,7 @@ export const FLOORS: readonly Floor[] = [
           [306, 290],
         ],
         kind: "office",
-        labelAt: [368, 231],
+        labelAt: [368, 212],
       },
       {
         name: "玄関",
