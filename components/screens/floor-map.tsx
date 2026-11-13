@@ -285,31 +285,12 @@ function PlainRoom({ room }: { room: PlanRoom }) {
   return (
     <>
       <polygon
-        points={pointsText(
-          room.mergeRight
-            ? // 右隣の線の上まで塗りを重ねて、境目の線を隠す
-              [
-                points[0],
-                [points[1][0] + 2, points[1][1]],
-                [points[2][0] + 2, points[2][1]],
-                points[3],
-              ]
-            : points,
-        )}
+        points={pointsText(points)}
         fill={style.fill}
-        stroke={room.attachTop || room.mergeRight ? "none" : style.stroke}
+        stroke={room.attachTop ? "none" : style.stroke}
         strokeWidth={1.5}
         strokeDasharray={room.kind === "open" ? "6 5" : undefined}
       />
-      {room.mergeRight && (
-        // 右の辺は、階段との境目なので、線を引かない (上・左・下だけ)
-        <polyline
-          points={pointsText([points[1], points[0], points[3], points[2]])}
-          fill="none"
-          stroke={style.stroke}
-          strokeWidth={1.5}
-        />
-      )}
       {room.attachTop && (
         // 上の辺は、上の部屋との境目なので、線を引かない (右・下・左だけ)
         <polyline

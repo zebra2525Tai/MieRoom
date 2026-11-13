@@ -21,8 +21,6 @@ export type PlanRoom = {
   small?: boolean;
   /** 上の部屋の下にくっついている (上の辺の線を引かない) */
   attachTop?: boolean;
-  /** 右隣の部屋と 1 つにつながっている (右の辺の線を引かない)。右隣より後に書く */
-  mergeRight?: boolean;
   /** 文字を縦に書く */
   vertical?: boolean;
   /** 文字の中心 (広い部分に置きたいとき) */
@@ -81,15 +79,9 @@ const OUTLINE_1F: Pt[] = [
 ];
 
 const common: PlanRoom[] = [
-  // EV は階段と 1 つにつながる (階段を先に描き、EV を後から重ねて、境目の線を消す)
+  // EV と階段は、セットで並べる (それぞれの線は残す)
+  { name: "EV", points: rect(206, 262, 24, 28), kind: "fac", small: true },
   { name: "階段", points: rect(230, 238, 38, 52), kind: "fac", small: true },
-  {
-    name: "EV",
-    points: rect(206, 262, 24, 28),
-    kind: "fac",
-    small: true,
-    mergeRight: true,
-  },
 ];
 const emerg: PlanRoom = {
   name: "非常階段",
