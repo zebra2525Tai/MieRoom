@@ -79,7 +79,7 @@ const OUTLINE_1F: Pt[] = [
 ];
 
 const common: PlanRoom[] = [
-  { name: "EV", points: rect(178, 262, 24, 28), kind: "fac", small: true },
+  { name: "EV", points: rect(181, 262, 24, 28), kind: "fac", small: true },
   { name: "階段", points: rect(205, 238, 38, 52), kind: "fac", small: true },
 ];
 const emerg: PlanRoom = {
