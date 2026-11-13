@@ -19,6 +19,8 @@ export type PlanRoom = {
   kind: PlanKind;
   /** 小さい施設 (文字を小さくする) */
   small?: boolean;
+  /** 上の部屋の下にくっついている (上の辺の線を引かない) */
+  attachTop?: boolean;
   /** 文字を縦に書く */
   vertical?: boolean;
   /** 文字の中心 (広い部分に置きたいとき) */
@@ -77,7 +79,7 @@ const OUTLINE_1F: Pt[] = [
 ];
 
 const common: PlanRoom[] = [
-  { name: "EV", points: rect(173, 262, 28, 28), kind: "fac", small: true },
+  { name: "EV", points: rect(178, 262, 24, 28), kind: "fac", small: true },
   { name: "階段", points: rect(205, 238, 38, 52), kind: "fac", small: true },
 ];
 const emerg: PlanRoom = {
@@ -124,6 +126,7 @@ export const FLOORS: readonly Floor[] = [
         points: rect(372, 100, 46, 14),
         kind: "fac",
         small: true,
+        attachTop: true,
       },
       emerg,
       { name: "505", points: rect(173, 125, 85, 70), kind: "room" },
@@ -200,6 +203,7 @@ export const FLOORS: readonly Floor[] = [
         points: rect(348, 100, 50, 16),
         kind: "office",
         small: true,
+        attachTop: true,
       },
       emerg,
       {

@@ -287,10 +287,19 @@ function PlainRoom({ room }: { room: PlanRoom }) {
       <polygon
         points={pointsText(points)}
         fill={style.fill}
-        stroke={style.stroke}
+        stroke={room.attachTop ? "none" : style.stroke}
         strokeWidth={1.5}
         strokeDasharray={room.kind === "open" ? "6 5" : undefined}
       />
+      {room.attachTop && (
+        // 上の辺は、上の部屋との境目なので、線を引かない (右・下・左だけ)
+        <polyline
+          points={pointsText([points[1], points[2], points[3], points[0]])}
+          fill="none"
+          stroke={style.stroke}
+          strokeWidth={1.5}
+        />
+      )}
       {room.name !== "" &&
         (room.vertical ? (
           // 縦書き: 文字を立てたまま、上から下へ 1 文字ずつ並べる
