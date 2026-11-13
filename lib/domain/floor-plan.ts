@@ -192,7 +192,7 @@ export const FLOORS: readonly Floor[] = [
         ],
         kind: "room",
       },
-      { name: "201", points: rect(204, 0, 136, 110), kind: "room" },
+      { name: "201", points: rect(204, 0, 141, 116), kind: "room" },
       {
         name: "事務室",
         points: rect(345, 0, 127, 100),
@@ -200,7 +200,7 @@ export const FLOORS: readonly Floor[] = [
       },
       {
         name: "保健室",
-        points: rect(348, 100, 50, 16),
+        points: rect(345, 100, 53, 16),
         kind: "office",
         small: true,
         attachTop: true,
