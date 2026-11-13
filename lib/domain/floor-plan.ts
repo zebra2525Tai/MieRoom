@@ -119,12 +119,6 @@ export const FLOORS: readonly Floor[] = [
       { name: "503", points: slantTop(173), kind: "room" },
       { name: "502", points: rect(173, 0, 130, 100), kind: "room" },
       { name: "501", points: rect(303, 0, 133, 100), kind: "room" },
-      {
-        name: "倉庫",
-        points: rect(372, 104, 46, 14),
-        kind: "fac",
-        small: true,
-      },
       emerg,
       { name: "505", points: rect(173, 135, 85, 60), kind: "room" },
       { name: "504", points: lower, kind: "room" },
