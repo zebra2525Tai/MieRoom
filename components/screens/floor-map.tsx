@@ -69,7 +69,7 @@ const TOILET = {
 };
 
 // 縦書きの文字の大きさ: [ふつう, 非常階段]
-const VERTICAL_SIZE = [14, 16] as const;
+const VERTICAL_SIZE = [14, 14] as const;
 
 const scaled = (points: readonly Pt[]): Pt[] =>
   points.map(([x, y]) => [x * SCALE, y * SCALE] as const);
