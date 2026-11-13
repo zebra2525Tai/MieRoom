@@ -254,13 +254,6 @@ export const FLOORS: readonly Floor[] = [
       { name: "学生ホール", points: rect(185, 20, 115, 60), kind: "open" },
       emerg,
       {
-        name: "受付",
-        points: rect(286, 148, 20, 90),
-        kind: "office",
-        small: true,
-        vertical: true,
-      },
-      {
         name: "職員室",
         points: [
           [306, 148],
@@ -272,6 +265,14 @@ export const FLOORS: readonly Floor[] = [
         ],
         kind: "office",
         labelAt: [368, 212],
+      },
+      // 職員室の中 (左の端)。職員室より後に書いて、上に重ねる
+      {
+        name: "受付",
+        points: rect(306, 148, 20, 90),
+        kind: "office",
+        small: true,
+        vertical: true,
       },
       {
         name: "玄関",
