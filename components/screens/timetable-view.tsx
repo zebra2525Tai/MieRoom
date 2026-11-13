@@ -28,7 +28,10 @@ import {
   formatLongDate,
   formatMonth,
   monthOf,
+  weekdayHeaders,
   weekdayOf,
+  weekStartOf,
+  type WeekStart,
 } from "@/lib/domain/school-date";
 import { withQuery } from "@/lib/url";
 import {
@@ -40,10 +43,16 @@ import {
   type LessonView,
   type TimetableDay,
 } from "./lesson-parts";
+import { WeekStartMemory } from "./week-start-memory";
 
 export type TimetableMode = "day" | "week" | "month";
 
-const WEEKDAY_HEADERS = ["月", "火", "水", "木", "金", "土", "日"];
+// The month grid gives 土/日 narrower columns (usually no lessons). Written out in
+// full so that Tailwind finds both class names.
+const MONTH_GRID_COLUMNS: Record<WeekStart, string> = {
+  mon: "grid-cols-[repeat(5,minmax(0,1fr))_minmax(0,0.6fr)_minmax(0,0.6fr)]",
+  sun: "grid-cols-[minmax(0,0.6fr)_repeat(5,minmax(0,1fr))_minmax(0,0.6fr)]",
+};
 
 function DayView({
   day,
@@ -380,11 +389,13 @@ function MonthView({
   days,
   month,
   today,
+  weekStart,
   dayHref,
 }: {
   days: TimetableDay[];
   month: string;
   today: string;
+  weekStart: WeekStart;
   dayHref: (date: string) => string;
 }) {
   const lastRowFrom = days.length - 7;
@@ -394,6 +405,7 @@ function MonthView({
         days={days}
         month={month}
         today={today}
+        weekStart={weekStart}
         dayHref={dayHref}
       />
       {/* From xl only: at lg the weekday columns are too narrow to read a subject,
@@ -401,8 +413,10 @@ function MonthView({
           lessons). Below 680px the grid scrolls sideways. The last column and row drop their outer border, which the box
           already draws. */}
       <div className="scroll-shadow-x hidden overflow-auto rounded-[11px] border border-line xl:block print:block">
-        <div className="grid min-w-[680px] grid-cols-[repeat(5,minmax(0,1fr))_minmax(0,0.6fr)_minmax(0,0.6fr)] [&>*:nth-child(7n)]:border-r-0">
-          {WEEKDAY_HEADERS.map((name) => (
+        <div
+          className={`grid min-w-[680px] ${MONTH_GRID_COLUMNS[weekStart]} [&>*:nth-child(7n)]:border-r-0`}
+        >
+          {weekdayHeaders(weekStart).map((name) => (
             <div
               key={name}
               className="border-b border-line bg-[#f6f8fc] px-3 py-2 text-[11px] font-semibold text-[#586579]"
@@ -478,11 +492,13 @@ function MonthCalendar({
   days,
   month,
   today,
+  weekStart,
   dayHref,
 }: {
   days: TimetableDay[];
   month: string;
   today: string;
+  weekStart: WeekStart;
   dayHref: (date: string) => string;
 }) {
   const lastRowFrom = days.length - 7;
@@ -490,7 +506,7 @@ function MonthCalendar({
     <div className="xl:hidden print:hidden">
       <div className="overflow-hidden rounded-[11px] border border-line bg-white">
         <div className="grid grid-cols-7 [&>*:nth-child(7n)]:border-r-0">
-          {WEEKDAY_HEADERS.map((name) => (
+          {weekdayHeaders(weekStart).map((name) => (
             <div
               key={name}
               className="border-b border-line bg-[#f6f8fc] py-2 text-center text-[11px] font-semibold text-[#586579]"
@@ -595,6 +611,7 @@ function MonthCalendar({
 export function TimetableView({
   mode,
   date,
+  weekStart = "mon",
   today,
   minutes,
   days,
@@ -610,6 +627,8 @@ export function TimetableView({
 }: {
   mode: TimetableMode;
   date: string;
+  /** 週の始まり (week and month views). */
+  weekStart?: WeekStart;
   today: string;
   minutes: number;
   days: TimetableDay[];
@@ -629,12 +648,20 @@ export function TimetableView({
     class: selectedClassId,
     teacher: selectedTeacherId,
   };
-  const hrefFor = (next: { view?: TimetableMode; date?: string }) =>
+  // Sunday travels in every link while it is chosen. The switch itself always names
+  // its side (start=mon too), which is what WeekStartMemory remembers.
+  const hrefFor = (next: {
+    view?: TimetableMode;
+    date?: string;
+    start?: WeekStart;
+  }) =>
     withQuery(basePath, {
       ...scope,
       view: next.view ?? mode,
       date: next.date ?? date,
+      start: next.start ?? (weekStart === "sun" ? "sun" : null),
     });
+  const showsWeeks = mode === "week" || mode === "month";
   const previous =
     mode === "day"
       ? addDays(date, -1)
@@ -683,6 +710,22 @@ export function TimetableView({
             active: mode === view,
           }))}
         />
+        {showsWeeks && (
+          <Segmented
+            stretch
+            label="週の始まり"
+            items={(
+              [
+                ["mon", "月曜始まり"],
+                ["sun", "日曜始まり"],
+              ] as const
+            ).map(([start, label]) => ({
+              label,
+              href: hrefFor({ start }),
+              active: weekStart === start,
+            }))}
+          />
+        )}
         <div className="grid w-full grid-cols-3 gap-1.5 sm:flex sm:w-auto sm:items-center">
           <LinkButton size="sm" href={hrefFor({ date: previous })}>
             <Icon name="chevronLeft" size={13} />
@@ -703,6 +746,9 @@ export function TimetableView({
           <input type="hidden" name="view" value={mode} />
           {selectedClassId && !selectedTeacherId && (
             <input type="hidden" name="class" value={selectedClassId} />
+          )}
+          {weekStart === "sun" && (
+            <input type="hidden" name="start" value="sun" />
           )}
           <AutoSubmitInput
             key={date}
@@ -738,7 +784,7 @@ export function TimetableView({
         {mode === "month"
           ? formatMonth(monthOf(date))
           : mode === "week"
-            ? `${formatLongDate(days[0]?.date ?? date)} の週`
+            ? `${formatLongDate(weekStartOf(date, weekStart))} の週`
             : formatLongDate(date)}
         の時間割
       </Callout>
@@ -770,9 +816,11 @@ export function TimetableView({
           days={days}
           month={monthOf(date)}
           today={today}
+          weekStart={weekStart}
           dayHref={(day) => hrefFor({ view: "day", date: day })}
         />
       )}
+      {showsWeeks && <WeekStartMemory />}
     </>
   );
 }

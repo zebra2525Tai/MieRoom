@@ -69,6 +69,38 @@ export function mondayOf(date: string): string {
   return addDays(date, -((weekdayOf(date) + 6) % 7));
 }
 
+/**
+ * The day a week starts on in S03 (時間割). Monday unless the person chose Sunday;
+ * the choice only changes how weeks are shown, never a rule.
+ */
+export type WeekStart = "mon" | "sun";
+
+/** "sun" stays Sunday; anything else (missing, unknown) is Monday. */
+export function parseWeekStart(value: unknown): WeekStart {
+  return value === "sun" ? "sun" : "mon";
+}
+
+/** The first day of the week that holds the date. */
+export function weekStartOf(date: string, start: WeekStart = "mon"): string {
+  return start === "sun" ? addDays(date, -weekdayOf(date)) : mondayOf(date);
+}
+
+/** The weekday names in the order of the week: 月〜日, or 日〜土. */
+export function weekdayHeaders(start: WeekStart = "mon"): string[] {
+  const order = start === "sun" ? [0, 1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5, 6, 0];
+  return order.map((weekday) => WEEKDAY_NAMES[weekday]);
+}
+
+/**
+ * The days S03 asks for in the week view: 月〜土 from Monday (Sunday is never part of
+ * that week), 日〜土 from Sunday. The page then leaves out a weekend day with no lesson.
+ */
+export function weekDates(date: string, start: WeekStart = "mon"): string[] {
+  const first = weekStartOf(date, start);
+  const count = start === "sun" ? 7 : 6;
+  return Array.from({ length: count }, (_, i) => addDays(first, i));
+}
+
 export function monthOf(date: string): string {
   return date.slice(0, 7);
 }
@@ -79,14 +111,21 @@ export function addMonths(month: string, count: number): string {
   return fromUtc(moved).slice(0, 7);
 }
 
-/** The weeks (Monday first) that cover a month, including days of the months beside it. */
-export function monthWeeks(month: string): string[][] {
+/**
+ * The weeks that cover a month, including days of the months beside it. Each week
+ * starts on Monday, or on Sunday when asked.
+ */
+export function monthWeeks(
+  month: string,
+  start: WeekStart = "mon",
+): string[][] {
   const next = addMonths(month, 1);
   const weeks: string[][] = [];
-  let monday = mondayOf(`${month}-01`);
-  while (monday < `${next}-01`) {
-    weeks.push(Array.from({ length: 7 }, (_, i) => addDays(monday, i)));
-    monday = addDays(monday, 7);
+  let first = weekStartOf(`${month}-01`, start);
+  while (first < `${next}-01`) {
+    const day = first;
+    weeks.push(Array.from({ length: 7 }, (_, i) => addDays(day, i)));
+    first = addDays(first, 7);
   }
   return weeks;
 }

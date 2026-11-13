@@ -3,15 +3,16 @@ import {
   type TimetableMode,
 } from "@/components/screens/timetable-view";
 import {
-  addDays,
   fiscalYearOfDate,
   isSchoolDate,
-  mondayOf,
   monthOf,
   monthWeeks,
+  parseWeekStart,
   schoolMinutes,
   schoolToday,
+  weekDates,
   weekdayOf,
+  type WeekStart,
 } from "@/lib/domain/school-date";
 import {
   listActiveTeachers,
@@ -21,14 +22,16 @@ import { loadTimetableDays } from "@/lib/server/queries/lessons";
 import { hasRole, requireUser } from "@/lib/server/session";
 import { one } from "@/lib/url";
 
-function datesOf(mode: TimetableMode, date: string): string[] {
+function datesOf(
+  mode: TimetableMode,
+  date: string,
+  start: WeekStart,
+): string[] {
   if (mode === "day") return [date];
-  if (mode === "week") {
-    // 月〜土。土曜は、授業があるときだけ出す(下で、授業のない土曜を外す。14-1 #19)。
-    const monday = mondayOf(date);
-    return [0, 1, 2, 3, 4, 5].map((offset) => addDays(monday, offset));
-  }
-  return monthWeeks(monthOf(date)).flat();
+  // 月〜土 (月曜始まり) または 日〜土 (日曜始まり)。土日は、授業があるときだけ出す
+  // (下で、授業のない土日を外す。14-1 #19)。
+  if (mode === "week") return weekDates(date, start);
+  return monthWeeks(monthOf(date), start).flat();
 }
 
 // S03 時間割
@@ -44,6 +47,8 @@ export default async function TimetablePage({
   const view = one(params.view);
   const mode: TimetableMode =
     view === "week" || view === "month" ? view : "day";
+  // 週の始まり。選んだ方はブラウザが覚えて、URL で送ってくる (week-start-memory.tsx)。
+  const weekStart = parseWeekStart(one(params.start));
 
   const [classes, teachers] = await Promise.all([
     listClassesForYear(fiscalYearOfDate(date)),
@@ -56,14 +61,14 @@ export default async function TimetablePage({
     : (classes.find((item) => item.id === one(params.class)) ??
       classes[0] ??
       null);
-  const loaded = await loadTimetableDays(datesOf(mode, date), {
+  const loaded = await loadTimetableDays(datesOf(mode, date, weekStart), {
     classId: selectedClass?.id ?? null,
     teacherId: selectedTeacher?.id ?? null,
   });
   const days =
     mode === "week"
       ? loaded.filter(
-          (day) => weekdayOf(day.date) !== 6 || day.lessons.length > 0,
+          (day) => weekdayOf(day.date) % 6 !== 0 || day.lessons.length > 0,
         )
       : loaded;
 
@@ -71,6 +76,7 @@ export default async function TimetablePage({
     <TimetableView
       mode={mode}
       date={date}
+      weekStart={weekStart}
       today={today}
       minutes={schoolMinutes(now)}
       days={days}
