@@ -269,7 +269,7 @@ export const FLOORS: readonly Floor[] = [
       // 職員室の中 (左の端)。職員室より後に書いて、上に重ねる
       {
         name: "受付",
-        points: rect(306, 148, 20, 90),
+        points: rect(306, 148, 20, 82),
         kind: "office",
         small: true,
         vertical: true,
