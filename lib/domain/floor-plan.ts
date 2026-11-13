@@ -243,14 +243,16 @@ export const FLOORS: readonly Floor[] = [
     rooms: [
       {
         name: "テラス",
+        // 101 と同じ高さで、壁 (左の斜めの線) から 101 までいっぱいに
         points: [
           [0, 0],
-          [40, 0],
-          [40, 70],
-          [17, 70],
+          [50, 0],
+          [50, 152],
+          [25.2, 152],
         ],
         kind: "green",
         small: true,
+        vertical: true,
       },
       { name: "101", points: rect(50, 0, 115, 152), kind: "room" },
       { name: "学生ホール", points: rect(185, 20, 115, 60), kind: "open" },
