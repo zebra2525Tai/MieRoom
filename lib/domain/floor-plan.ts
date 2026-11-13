@@ -82,7 +82,7 @@ const common: PlanRoom[] = [
 ];
 const emerg: PlanRoom = {
   name: "非常階段",
-  points: rect(442, 94, 30, 54),
+  points: rect(442, 100, 30, 48),
   kind: "emerg",
   vertical: true,
 };
@@ -121,7 +121,7 @@ export const FLOORS: readonly Floor[] = [
       { name: "501", points: rect(303, 0, 133, 100), kind: "room" },
       {
         name: "倉庫",
-        points: rect(372, 104, 46, 14),
+        points: rect(372, 100, 46, 14),
         kind: "fac",
         small: true,
       },
@@ -183,8 +183,8 @@ export const FLOORS: readonly Floor[] = [
         name: "202",
         points: [
           [0, 0],
-          [178, 0],
-          [178, 92],
+          [173, 0],
+          [173, 92],
           [22.2, 92],
         ],
         kind: "room",
@@ -192,12 +192,12 @@ export const FLOORS: readonly Floor[] = [
       { name: "201", points: rect(204, 0, 136, 110), kind: "room" },
       {
         name: "事務室",
-        points: rect(345, 0, 127, 94),
+        points: rect(345, 0, 127, 100),
         kind: "office",
       },
       {
         name: "保健室",
-        points: rect(348, 96, 50, 16),
+        points: rect(348, 100, 50, 16),
         kind: "office",
         small: true,
       },
@@ -206,8 +206,8 @@ export const FLOORS: readonly Floor[] = [
         name: "203",
         points: [
           [22.2, 92],
-          [178, 92],
-          [178, 184],
+          [173, 92],
+          [173, 184],
           [44.5, 184],
         ],
         kind: "room",
