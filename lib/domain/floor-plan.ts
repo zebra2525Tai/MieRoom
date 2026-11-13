@@ -123,7 +123,7 @@ export const FLOORS: readonly Floor[] = [
       { name: "501", points: rect(303, 0, 133, 100), kind: "room" },
       {
         name: "倉庫",
-        points: rect(372, 100, 46, 14),
+        points: rect(390, 100, 46, 16),
         kind: "fac",
         small: true,
         attachTop: true,
