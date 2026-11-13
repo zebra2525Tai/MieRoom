@@ -189,7 +189,7 @@ export const FLOORS: readonly Floor[] = [
         ],
         kind: "room",
       },
-      { name: "201", points: rect(204, 0, 136, 185), kind: "room" },
+      { name: "201", points: rect(204, 0, 136, 110), kind: "room" },
       {
         name: "事務室",
         points: [
@@ -290,11 +290,11 @@ export const FLOORS: readonly Floor[] = [
       { name: "EV", points: rect(150, 262, 28, 28), kind: "fac", small: true },
       {
         name: "階段",
-        points: rect(182, 238, 38, 52),
+        points: rect(222, 238, 38, 52),
         kind: "fac",
         small: true,
       },
-      { name: "WC", points: rect(222, 238, 36, 52), kind: "fac" },
+      { name: "WC", points: rect(182, 238, 36, 52), kind: "fac" },
     ],
   },
 ];
